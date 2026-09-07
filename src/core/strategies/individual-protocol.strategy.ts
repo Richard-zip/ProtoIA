@@ -117,25 +117,31 @@ export class IndividualProtocolStrategy extends BaseProtocolStrategy {
 
     const sections = this.extractByHeadingMap(rawText, headingMap);
 
-    const fallbackTemas = input.temas.filter(Boolean).join("\n");
-    const firstTema = input.temas.filter(Boolean)[0] || "el tema";
+    const fallbackTemas = input.temas
+      .map((t) => this.cleanTopicName(t, false))
+      .filter(Boolean)
+      .join("\n");
+    const rawFirst = input.temas.filter(Boolean)[0];
+    const firstTema = rawFirst ? this.cleanTopicName(rawFirst, true) : "el tema";
+    const materiaLimpia = this.cleanMateriaName(input.materia);
+    const listadoTemas = this.formatTopicList(input.temas, true);
 
     const rawConceptos = sections.conceptos || `Conceptos principales relacionados con ${firstTema}.`;
     const rawObjetivos =
       sections.objetivos ||
-      `**Objetivo General:** Comprender ${firstTema} mediante el análisis de ${input.temas.filter(Boolean).slice(1, 3).join(" y ") || "los contenidos del curso"}.`;
+      `**Objetivo General:** Comprender ${firstTema} mediante el análisis de ${input.temas.filter(Boolean).slice(1, 3).map((t) => this.cleanTopicName(t, true)).join(" y ") || "los contenidos del curso"}.`;
     const rawRecomendaciones =
       sections.recomendaciones ||
       "**Pregunta para discusión:** ¿En qué medida los conceptos analizados pueden ser aplicados directamente en proyectos reales?";
 
     const result: Record<string, string> = {
-      title: `PROTOCOLO INDIVIDUAL - ${input.materia || "Materia"}`,
+      title: `PROTOCOLO INDIVIDUAL - ${materiaLimpia}`,
       descripcion:
         sections.descripcion ||
-        `Este protocolo aborda ${input.temas.filter(Boolean).join(", ") || "los temas principales"} en el contexto de ${input.materia || "la materia"}.`,
+        `Este protocolo aborda ${listadoTemas} en el contexto de ${materiaLimpia}.`,
       palabras:
         sections.palabras ||
-        ["protocolo", "individual", ...input.temas.filter(Boolean).slice(0, 6)].join(", "),
+        ["protocolo", "individual", ...input.temas.map((t) => this.cleanTopicName(t, true)).filter(Boolean).slice(0, 6)].join(", "),
       objetivos: this.formatObjectives(rawObjetivos),
       conceptos: this.formatConceptDefinitions(rawConceptos),
       resumen:

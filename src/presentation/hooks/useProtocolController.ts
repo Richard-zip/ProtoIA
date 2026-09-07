@@ -37,12 +37,12 @@ export function useProtocolController(
   const temasFiltrados = useMemo(() => {
     return temasTexto
       .split(/\r?\n+/)
-      .map((tema) => tema.replace(/^[•*-]\s*/, "").trim())
+      .map((tema) => tema.replace(/^[•*-]\s*/, "").replace(/[.,;:\s]+$/, "").trim())
       .filter(Boolean);
   }, [temasTexto]);
 
   const participantesFiltrados = useMemo(() => {
-    return participantes.map((p) => p.trim()).filter(Boolean);
+    return participantes.map((p) => p.replace(/[.,;:\s]+$/, "").trim()).filter(Boolean);
   }, [participantes]);
 
   const actualizarParticipante = useCallback((index: number, value: string) => {

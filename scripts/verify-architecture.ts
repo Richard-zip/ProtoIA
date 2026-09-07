@@ -312,6 +312,114 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
     "Las discusiones y recomendaciones se extraen del markdown de Gemini"
   );
 
+  // -------------------------------------------------------------
+  // Test 7: Normalización de Mayúsculas Sostenidas y Puntuación Anómala
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 7: Normalización de Mayúsculas Sostenidas y Puntuación Anómala ---");
+
+  const allCapsInput = {
+    materia: "SEGURIDAD INFORMATICA",
+    temas: [
+      "FASES DE UN PENTESTING.",
+      "PRUEBAS DE CAJA BLANCA Y CAJA NEGRA.",
+      "OWASP TOP TEN.",
+      "ATAQUES DE RED.",
+    ],
+    participantes: ["RICHARD ASSIS.", "MARIA INES ARRIETA."],
+    tipo: "colaborativo",
+  };
+
+  const allCapsUseCaseResult = await generateUseCase.execute(allCapsInput);
+
+  assert(
+    allCapsUseCaseResult.metadata.temas.every((t) => !t.endsWith(".")),
+    "Los temas limpios en la metadata no tienen punto final"
+  );
+  assert(
+    allCapsUseCaseResult.metadata.participantes.every((p) => !p.endsWith(".")),
+    "Los participantes limpios en la metadata no tienen punto final"
+  );
+
+  const individualStrategy = new IndividualProtocolStrategy();
+  const builtPromptIndiv = individualStrategy.buildPrompt(allCapsInput);
+
+  assert(
+    !builtPromptIndiv.includes("FASES DE UN PENTESTING"),
+    "El prompt individual no contiene temas en mayúsculas sostenidas"
+  );
+  assert(
+    builtPromptIndiv.includes("fases de un pentesting"),
+    "El prompt individual convirtió el primer tema a minúsculas naturales"
+  );
+  assert(
+    builtPromptIndiv.includes("OWASP"),
+    "El prompt individual preserva siglas técnicas en mayúsculas (OWASP)"
+  );
+  assert(
+    !/([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ])\.\.(?!\.)/.test(builtPromptIndiv),
+    "El prompt individual no genera dobles puntos (..)"
+  );
+
+  const builtPromptColab = colabStrategy.buildPrompt(allCapsInput);
+  assert(
+    !builtPromptColab.includes("FASES DE UN PENTESTING"),
+    "El prompt colaborativo no contiene temas en mayúsculas sostenidas"
+  );
+  assert(
+    builtPromptColab.includes("aborda fases de un pentesting"),
+    "El prompt colaborativo sustituyó correctamente [tema] en minúsculas naturales"
+  );
+  assert(
+    !builtPromptColab.includes("[tema]") && !builtPromptColab.includes("[TEMA]"),
+    "El prompt colaborativo no deja etiquetas [tema] sin sustituir"
+  );
+
+  class TestStrategy extends BaseProtocolStrategy {
+    readonly id = "test";
+    readonly label = "Test";
+    readonly requiresParticipants = false;
+    readonly defaultParticipantsText = "";
+    readonly templatePath = "";
+    buildPrompt(): string { return ""; }
+    extractSections(): Record<string, string> { return {}; }
+    getTemplateTargets(): TemplateTarget[] { return []; }
+
+    public testNormalize(val: string): string {
+      return this.normalizeSectionText(val);
+    }
+    public testFormatConcepts(val: string): string {
+      return this.formatConceptDefinitions(val);
+    }
+  }
+
+  const testStrategy = new TestStrategy();
+  const dirtyAiText = "La actividad consiste en demostrar mi comprensión de FASES DE UN PENTESTING y OWASP TOP TEN..";
+  const cleanedAiText = testStrategy.testNormalize(dirtyAiText);
+
+  assert(
+    !cleanedAiText.includes("FASES DE UN PENTESTING"),
+    "normalizeSectionText elimina bloques de mayúsculas sostenidas de la IA"
+  );
+  assert(
+    cleanedAiText.includes("fases de un pentesting"),
+    "normalizeSectionText convierte las palabras a minúsculas naturales"
+  );
+  assert(
+    cleanedAiText.includes("OWASP"),
+    "normalizeSectionText preserva la sigla técnica OWASP en mayúsculas"
+  );
+  assert(
+    !cleanedAiText.includes(".."),
+    "normalizeSectionText convierte dobles puntos (..) en un solo punto"
+  );
+
+  const conceptsWithAllCaps = "**FASES DE UN PENTESTING:** Etapas secuenciales de una prueba de intrusión.";
+  const formattedConcepts = testStrategy.testFormatConcepts(conceptsWithAllCaps);
+  assert(
+    formattedConcepts.includes("**Fases de un pentesting:**"),
+    "formatConceptDefinitions convierte términos en mayúsculas a formato Capitalizado estándar con dos puntos"
+  );
+
   console.log("\n🎉 TODAS LAS VERIFICACIONES DE ARQUITECTURA Y PRINCIPIOS SOLID PASARON EXITOSAMENTE.");
 }
 

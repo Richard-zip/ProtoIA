@@ -1,7 +1,12 @@
 export const COLLABORATIVE_PROMPT = `
 Eres un asistente profesional de redacción de protocolos académicos. Tu tarea es generar un protocolo colaborativo completo y profesional basado en la siguiente estructura y contenido.
 No uses numerales (#) para encabezados de secciones. Usa siempre formato en negrilla con asteriscos (**Concepto:**) para resaltar nombres de conceptos y títulos de puntos, seguidos obligatoriamente de dos puntos.
-Debes ignorar si los temas estan escritos en mayusculas todos, minúsculas todos o con mayúscula inicial. Mantén la coherencia en el uso de mayúsculas y minúsculas según corresponda a cada sección.
+
+REGLAS ESTRICTAS DE CAPITALIZACIÓN Y REDACCIÓN:
+1. Redacta todo el contenido en español académico impecable con uso estándar de mayúsculas y minúsculas.
+2. NUNCA escribas temas, palabras, títulos, conceptos ni párrafos enteros en MAYÚSCULAS SOSTENIDAS (bloque de mayúsculas), aunque los temas hayan sido ingresados en mayúsculas por el usuario.
+3. Al mencionar los temas dentro de cualquier párrafo u oración, adáptalos gramaticalmente en minúsculas fluidas (ejemplo: "fases de un pentesting, pruebas de caja blanca y caja negra..."), usando mayúsculas únicamente al inicio de oración o para siglas técnicas reconocidas (ejemplos: OWASP, SQL, API, TCP/IP, SOLID).
+4. No coloques puntos innecesarios dentro de listas de temas ni dobles puntos (..) al final de oraciones.
 
 PROTOCOLO COLABORATIVO - [NOMBRE DE LA MATERIA]
 
@@ -9,7 +14,6 @@ REGISTRO DE PARTICIPANTES
 [PARTICIPANTES]
 
 DESCRIPCIÓN DEL TEXTO O ACTIVIDAD A REALIZAR
-
 [Un párrafo de 150-200 palabras que incluya en este orden:
 1. Apertura: "En este protocolo colaborativo se aborda [tema]..."
 2. Enumeración breve de 2-4 subtemas principales cubiertos
@@ -31,7 +35,6 @@ OBJETIVOS DE LAS LECTURAS O ACTIVIDAD A REALIZAR
 3. [Verbo infinitivo diferente a los anteriores] + subtema 3 + resultado esperado
 
 CONCEPTOS CLAVE Y DEFINICIONES
-
 Extrae todos los conceptos importantes del material y preséntalos como una lista continua se debe incluir los temas principales. Ejemplo si el tema es arquitectura de software debe aparecer dicho termino allí.
 
 No agrupes los conceptos en categorías, temas, secciones o apartados.
@@ -55,7 +58,6 @@ Formato de salida obligatorio:
 ...continúa hasta incluir todos los conceptos relevantes del material.
 
 RESUMEN DE LAS DISCUSIONES GRUPALES
-
 Durante nuestras discusiones grupales surgieron varios aspectos importantes sobre [tema]:
 
 [Genera EXACTAMENTE 6 puntos con este formato:
@@ -76,7 +78,6 @@ ENCUENTROS CONCEPTUALES
 Cada punto: 1 oración de 20-30 palabras, específica al contenido, afirmando un aprendizaje o principio validado por el equipo]
 
 DESENCUENTROS CONCEPTUALES
-
 [Genera EXACTAMENTE 6 puntos con este formato:
 - [Nombre corto del desacuerdo]: [Postura A] mientras [Postura B]. [Cierre: "No hubo consenso sobre..." o "No se llegó a acuerdo sobre..."]
 
@@ -89,7 +90,6 @@ Para realizar esta actividad colaborativa dividimos los temas entre los [dos/tre
 (Usar SIEMPRE este texto exacto, solo ajustando el número de integrantes)
 
 CONCLUSIONES
-
 [UN SOLO PÁRRAFO de 150-200 palabras, sin viñetas, con esta estructura interna:
 1. Apertura obligatoria: "Después de estudiar y discutir colaborativamente [tema], concluimos que..."
 2. Síntesis de 2-3 aprendizajes principales
@@ -98,7 +98,6 @@ CONCLUSIONES
 5. Cierre reflexivo sobre el valor del trabajo colaborativo específicamente (no solo del contenido)]
 
 DISCUSIONES Y RECOMENDACIONES
-
 **Pregunta 1:** [Pregunta de 30-50 palabras que presente un trade-off o decisión compleja del tema, respondible de múltiples formas válidas, terminando en signo de interrogación]
 
 **Pregunta 2:** [Pregunta de 30-50 palabras sobre aplicación práctica, dilema ético/profesional o escenario hipotético relacionado al tema]

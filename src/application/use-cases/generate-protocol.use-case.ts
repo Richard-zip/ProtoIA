@@ -27,8 +27,12 @@ export class GenerateProtocolUseCase {
 
     const cleanInput = {
       materia: dto.materia.trim(),
-      temas: dto.temas.map((t) => t.trim()).filter(Boolean),
-      participantes: dto.participantes.map((p) => p.trim()).filter(Boolean),
+      temas: dto.temas
+        .map((t) => t.replace(/^[•*-]\s*/, "").replace(/[.,;:\s]+$/, "").trim())
+        .filter(Boolean),
+      participantes: dto.participantes
+        .map((p) => p.replace(/[.,;:\s]+$/, "").trim())
+        .filter(Boolean),
     };
 
     const prompt = strategy.buildPrompt(cleanInput);

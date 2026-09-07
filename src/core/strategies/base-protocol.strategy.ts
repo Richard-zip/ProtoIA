@@ -1,5 +1,19 @@
 import { IProtocolStrategy, ProtocolStrategyInput, TemplateTarget } from "../interfaces/protocol-strategy.interface";
 
+const KNOWN_ACRONYMS = new Set([
+  "AI", "IA", "API", "APIS", "REST", "SOAP", "SQL", "NOSQL",
+  "HTML", "CSS", "JS", "TS", "JSON", "XML", "YAML", "HTTP", "HTTPS",
+  "TCP", "IP", "UDP", "DNS", "DHCP", "FTP", "SSH", "SSL", "TLS",
+  "OWASP", "CVE", "NIST", "ISO", "IEEE", "VPN", "LAN", "WAN",
+  "OS", "SO", "CPU", "RAM", "SSD", "HDD", "IOT",
+  "DOS", "DDOS", "XSS", "CSRF", "SSRF", "RCE", "WAF", "SIEM", "SOC",
+  "IAM", "RBAC", "JWT", "AWS", "GCP", "CI", "CD", "TDD", "BDD", "DDD", "SOLID",
+  "ACID", "CRUD", "ORM", "SPA", "UI", "UX", "POO", "OOP", "MVC", "SDK", "CLI"
+]);
+
+const ROMAN_NUMERALS = /^(?:X{0,3})(?:IX|IV|V?I{0,3})$/i;
+const MINOR_WORDS = new Set(["de", "del", "en", "para", "por", "y", "e", "o", "u", "la", "el", "los", "las", "un", "una", "unos", "unas", "con", "a"]);
+
 export abstract class BaseProtocolStrategy implements IProtocolStrategy {
   abstract readonly id: string;
   abstract readonly label: string;
@@ -11,19 +25,113 @@ export abstract class BaseProtocolStrategy implements IProtocolStrategy {
   abstract extractSections(rawText: string, input: ProtocolStrategyInput): Record<string, string>;
   abstract getTemplateTargets(extracted: Record<string, string>): TemplateTarget[];
 
+  protected cleanTopicName(raw: string, isInline = false): string {
+    if (!raw) return "";
+    let text = raw
+      .trim()
+      .replace(/^[•*-]\s*/, "")
+      .replace(/[.,;:\s]+$/, "")
+      .trim();
+    if (!text) return "";
+
+    const letters = text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "");
+    const isAllCaps = letters.length > 2 && letters === letters.toUpperCase();
+
+    if (isAllCaps) {
+      const words = text.split(/\s+/);
+      const converted = words.map((w, idx) => {
+        const cleanW = w.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+        if (KNOWN_ACRONYMS.has(cleanW) || ROMAN_NUMERALS.test(cleanW)) {
+          return cleanW;
+        }
+        const lower = w.toLowerCase();
+        if (idx === 0 && !isInline) {
+          return lower.charAt(0).toUpperCase() + lower.slice(1);
+        }
+        return lower;
+      });
+      text = converted.join(" ");
+    } else if (isInline) {
+      const firstWord = text.split(/\s+/)[0];
+      const cleanFirst = firstWord.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+      if (!KNOWN_ACRONYMS.has(cleanFirst) && !ROMAN_NUMERALS.test(cleanFirst)) {
+        text = text.charAt(0).toLowerCase() + text.slice(1);
+      }
+    }
+
+    return text;
+  }
+
+  protected formatTopicList(topics: string[], isInline = true): string {
+    const cleaned = topics.map((t) => this.cleanTopicName(t, isInline)).filter(Boolean);
+    if (cleaned.length === 0) return "los temas principales";
+    if (cleaned.length === 1) return cleaned[0];
+    if (cleaned.length === 2) {
+      const connector = /^[iíIÍ]/.test(cleaned[1]) ? "e" : "y";
+      return `${cleaned[0]} ${connector} ${cleaned[1]}`;
+    }
+    const allButLast = cleaned.slice(0, -1).join(", ");
+    const last = cleaned[cleaned.length - 1];
+    const connector = /^[iíIÍ]/.test(last) ? "e" : "y";
+    return `${allButLast} ${connector} ${last}`;
+  }
+
+  protected cleanMateriaName(raw: string): string {
+    if (!raw) return "Materia no especificada";
+    const text = raw.trim().replace(/[.,;:\s]+$/, "");
+    if (!text) return "Materia no especificada";
+
+    const letters = text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, "");
+    const isAllCaps = letters.length > 2 && letters === letters.toUpperCase();
+
+    if (!isAllCaps) {
+      return text;
+    }
+
+    const words = text.split(/\s+/);
+    const converted = words.map((w, idx) => {
+      const cleanW = w.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+      if (KNOWN_ACRONYMS.has(cleanW) || ROMAN_NUMERALS.test(cleanW)) {
+        return cleanW;
+      }
+      const lower = w.toLowerCase();
+      if (idx > 0 && MINOR_WORDS.has(lower)) {
+        return lower;
+      }
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    });
+
+    return converted.join(" ");
+  }
+
+  protected sanitizeAllCapsWords(text: string): string {
+    return text.replace(/\b([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{1,})+\b)/g, (match) => {
+      const words = match.split(/\s+/);
+      const converted = words.map((w) => {
+        const cleanW = w.replace(/[^A-Z0-9]/g, "");
+        if (KNOWN_ACRONYMS.has(cleanW) || ROMAN_NUMERALS.test(cleanW)) {
+          return cleanW;
+        }
+        return w.toLowerCase();
+      });
+      return converted.join(" ");
+    });
+  }
+
   protected formatSubstitutions(
     template: string,
     input: ProtocolStrategyInput,
     fallbackParticipants: string
   ): string {
-    const materiaLimpia = input.materia.trim() || "Materia no especificada";
-    const temasLimpios = input.temas.map((tema) => tema.trim()).filter(Boolean);
-    const temasTexto = temasLimpios.length > 0 ? temasLimpios.join(", ") : "los temas principales";
+    const materiaLimpia = this.cleanMateriaName(input.materia);
+    const rawTemas = input.temas.map((t) => t.trim()).filter(Boolean);
+    const primerTemaLimpio = rawTemas.length > 0 ? this.cleanTopicName(rawTemas[0], true) : "el tema principal";
+    const temasTexto = this.formatTopicList(rawTemas, true);
 
     let participantesTexto = "";
     if (input.participantes && input.participantes.length > 0) {
       participantesTexto = input.participantes
-        .map((p) => p.trim())
+        .map((p) => this.titleCaseName(p))
         .filter(Boolean)
         .join("\n");
     } else {
@@ -35,18 +143,27 @@ export abstract class BaseProtocolStrategy implements IProtocolStrategy {
       .join(materiaLimpia)
       .split("[TEMAS]")
       .join(temasTexto)
+      .split("[tema]")
+      .join(primerTemaLimpio)
+      .split("[TEMA]")
+      .join(primerTemaLimpio)
       .split("[PARTICIPANTES]")
-      .join(participantesTexto);
+      .join(participantesTexto)
+      .replace(/([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ])\.\.(?!\.)/g, "$1.");
   }
 
   protected normalizeSectionText(value: string): string {
-    return value
+    const cleaned = value
       .replace(/^#+\s*/gm, "")
       .replace(/^(?:[-•]|\*(?!\*))\s+/gm, "")
       .replace(/[ \t]+/g, " ")
       .replace(/\n{3,}/g, "\n\n")
       .replace(/[ \t]*\n[ \t]*/g, "\n")
+      .replace(/([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ])\.\.(?!\.)/g, "$1.")
+      .replace(/\.,/g, ",")
       .trim();
+
+    return this.sanitizeAllCapsWords(cleaned);
   }
 
   protected formatConceptDefinitions(text: string): string {
@@ -62,7 +179,8 @@ export abstract class BaseProtocolStrategy implements IProtocolStrategy {
       );
 
       if (match) {
-        const term = match[1].trim().replace(/^\*\*|\*\*$/g, "").trim();
+        let term = match[1].trim().replace(/^\*\*|\*\*$/g, "").trim();
+        term = this.cleanTopicName(term, false);
         let def = match[2].trim().replace(/^\*\*|\*\*$/g, "").trim();
         if (def.length > 0 && !/[.?!]$/.test(def)) {
           def = `${def}.`;
