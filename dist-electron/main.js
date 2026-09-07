@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -15,14 +15,21 @@ if (process.platform === "win32") {
 }
 let win;
 function createWindow() {
+  Menu.setApplicationMenu(null);
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    title: "Agnes",
+    icon: path.join(process.env.VITE_PUBLIC, "images/agnes.png"),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname$1, "preload.mjs")
     }
   });
+  win.removeMenu();
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  });
+  win.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+    console.error(`Renderer failed to load (${errorCode}): ${errorDescription} - ${validatedURL}`);
   });
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);

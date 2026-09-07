@@ -1,6 +1,6 @@
-# 🤖 ProtoAI — Generador de Protocolos Académicos con IA
+# 🤖 Agnes — Generador de Protocolos Académicos con IA
 
-ProtoAI es una aplicación de escritorio que utiliza inteligencia artificial (Google Gemini) para generar protocolos académicos de forma automática. El usuario ingresa la materia, los temas y los participantes, y la IA redacta un protocolo profesional y completo listo para exportar en formato Word (`.docx`).
+Agnes es una aplicación de escritorio que utiliza inteligencia artificial (Google Gemini) para generar protocolos académicos de forma automática. El usuario ingresa la materia, los temas y los participantes, y la IA redacta un protocolo profesional y completo listo para exportar en formato Word (`.docx`).
 
 > **⚠️ Nota:** Los protocolos generados por esta aplicación están diseñados exclusivamente para el formato y los estándares académicos de la **Universidad de Cartagena**.
 
@@ -43,7 +43,7 @@ ProtoAI es una aplicación de escritorio que utiliza inteligencia artificial (Go
 
 ```bash
 git clone https://github.com/Richard-zip/ProtoIA
-cd protoai
+cd ProtoIA
 ```
 
 ### 2. Instalar dependencias
@@ -65,7 +65,7 @@ Edita el archivo `.env` con tus valores:
 ```env
 VITE_GEMINI_API_KEY=tu_api_key_aqui
 GEMINI_MODEL=gemini-2.5-flash
-APP_NAME=ProtoAI
+APP_NAME=Agnes
 ```
 
 ---
@@ -88,24 +88,130 @@ pnpm build
 
 El instalador se generará en la carpeta `release/`.
 
+### 🧪 Ejecutar pruebas de arquitectura (SOLID)
+
+```bash
+pnpm test
+```
+
 ---
 
-## 📁 Estructura del proyecto
+## 🏛️ Arquitectura y Principios SOLID
+
+El proyecto implementa una **Arquitectura Limpia (Clean / Hexagonal Architecture - Ports & Adapters)** diseñada para desacoplar completamente las reglas de negocio de los frameworks, proveedores de IA y formatos de exportación.
+
+### Capas del Sistema (`src/`)
 
 ```
-protoai/
-├── electron/          # Proceso principal de Electron
-│   ├── main.ts        # Ventana principal e IPC
-│   └── preload.ts     # Script de precarga (bridge seguro)
-├── src/               # Aplicación React (renderer)
-│   ├── App.tsx        # Componente raíz
-│   ├── uiTests.tsx    # Interfaz principal de usuario
-│   ├── geminiTest.ts  # Integración con la API de Gemini
-│   └── wordExport.ts  # Exportación a formato Word
-├── public/            # Plantillas .docx y recursos estáticos
-├── example.env        # Plantilla de variables de entorno
-└── package.json
+src/
+├── core/                               # CAPA DE DOMINIO (Reglas de negocio puras)
+│   ├── entities/                       # Entidades del dominio (Protocol, ProtocolSection)
+│   ├── interfaces/                     # Puertos / Contratos (IAIService, IDocumentExporter, etc.)
+│   ├── prompts/                        # Prompts aislados e independientes (SRP)
+│   │   ├── individual.prompt.ts
+│   │   └── collaborative.prompt.ts
+│   ├── strategies/                     # Patrón Estrategia + Registro (Open/Closed Principle)
+│   │   ├── base-protocol.strategy.ts
+│   │   ├── individual-protocol.strategy.ts
+│   │   ├── collaborative-protocol.strategy.ts
+│   │   └── protocol-strategy.registry.ts
+│   └── helpers/                        # Parsers puros de secciones
+│
+├── application/                        # CAPA DE APLICACIÓN (Casos de Uso)
+│   ├── dtos/                           # DTOs de entrada y validación
+│   └── use-cases/                      # Orquestadores de negocio
+│       ├── generate-protocol.use-case.ts
+│       └── export-protocol.use-case.ts
+│
+├── infrastructure/                     # CAPA DE INFRAESTRUCTURA (Adaptadores)
+│   ├── ai/                             # Adaptadores de IA (GeminiAIService, MockAIService)
+│   ├── export/                         # Adaptadores de formato (DocxProtocolExporter, XML helpers)
+│   ├── download/                       # Adaptador para navegador / DOM (BrowserFileDownloader)
+│   ├── logging/                        # Servicio de logs reactivo (EventLoggerService)
+│   ├── config/                         # Lectura tipada de variables de entorno
+│   └── di/                             # Contenedor de Inyección de Dependencias (Composition Root)
+│
+└── presentation/                       # CAPA DE PRESENTACIÓN (React)
+    ├── components/                     # Componentes desacoplados (Form, Preview, Logs)
+    ├── hooks/                          # useProtocolController (mediador React <-> Casos de uso)
+    └── ProtocolApp.tsx                 # Vista principal ensamblada
 ```
+
+### Cumplimiento de Principios SOLID
+
+1. **S - Single Responsibility Principle (Responsabilidad Única):**
+   - Cada clase o módulo tiene una sola razón para cambiar.
+   - `GeminiAIService` solo maneja la comunicación con la API de Gemini.
+   - `DocxProtocolExporter` y `DocxXmlHelper` solo gestionan la manipulación OOXML/Word.
+   - `IndividualProtocolStrategy` y `CollaborativeProtocolStrategy` solo encapsulan las reglas y prompts de su tipo de protocolo.
+   - `ProtocolForm`, `ProtocolPreview` y `ActivityLogs` son componentes de UI especializados.
+
+2. **O - Open/Closed Principle (Abierto para extensión, cerrado para modificación):**
+   - Para agregar un nuevo tipo de protocolo (ej. *Investigación*, *Tesis* o *Laboratorio*), **no necesitas modificar** las funciones existentes de generación, exportación ni los componentes de la interfaz. Solo creas una clase que implemente `IProtocolStrategy` y la registras en `ProtocolStrategyRegistry`.
+   - La interfaz de usuario lee dinámicamente las estrategias registradas y las muestra automáticamente en el selector.
+
+3. **L - Liskov Substitution Principle (Sustitución de Liskov):**
+   - Cualquier proveedor que implemente `IAIService` (ej. `GeminiAIService`, `MockAIService`, o un futuro `OpenAIService`) puede intercambiarse sin alterar el comportamiento de `GenerateProtocolUseCase`.
+   - Cualquier exportador que implemente `IDocumentExporter` (ej. `DocxProtocolExporter`, `MarkdownProtocolExporter`) es compatible con `ExportProtocolUseCase`.
+
+4. **I - Interface Segregation Principle (Segregación de Interfaces):**
+   - Interfaces pequeñas, cohesivas y específicas (`IAIService`, `IDocumentExporter`, `IFileDownloader`, `ILogger`, `IProtocolStrategy`), evitando interfaces sobrecargadas con métodos innecesarios.
+
+5. **D - Dependency Inversion Principle (Inversión de Dependencias):**
+   - Los casos de uso y componentes React **dependen de abstracciones** (interfaces), nunca de implementaciones concretas de librerías externas.
+   - La composición e instanciación se gestiona de forma centralizada en `src/infrastructure/di/container.ts`.
+
+---
+
+## 🚀 ¿Cómo agregar nuevas funcionalidades sin romper las existentes?
+
+### Caso 1: Agregar un nuevo tipo de protocolo (ejemplo: "Investigación")
+
+1. Crea tu archivo en `src/core/strategies/research-protocol.strategy.ts`:
+   ```ts
+   import { BaseProtocolStrategy } from "./base-protocol.strategy";
+   import { ProtocolStrategyInput, TemplateTarget } from "../interfaces/protocol-strategy.interface";
+
+   export class ResearchProtocolStrategy extends BaseProtocolStrategy {
+     readonly id = "investigacion";
+     readonly label = "Investigación";
+     readonly requiresParticipants = true;
+     readonly defaultParticipantsText = "Investigador 1\nInvestigador 2";
+     readonly templatePath = "/templates/PLANTILLA PROTOCOLO INVESTIGACION.docx";
+
+     buildPrompt(input: ProtocolStrategyInput): string {
+       return `Tu prompt específico para investigación...`;
+     }
+
+     extractSections(rawText: string, input: ProtocolStrategyInput): Record<string, string> {
+       // Extracción de campos
+       return { ... };
+     }
+
+     getTemplateTargets(extracted: Record<string, string>): TemplateTarget[] {
+       return [ ... ];
+     }
+   }
+   ```
+2. Regístralo en `src/infrastructure/di/container.ts`:
+   ```ts
+   protocolRegistry.register(new ResearchProtocolStrategy());
+   ```
+3. **¡Listo!** El selector de la interfaz mostrará la nueva opción, el generador usará su prompt y el exportador mapeará su plantilla sin tocar ni una línea del código individual o colaborativo.
+
+### Caso 2: Cambiar o añadir otro proveedor de IA (ejemplo: Claude, OpenAI u Ollama)
+
+1. Crea una clase que implemente `IAIService`:
+   ```ts
+   export class OpenAIService implements IAIService {
+     async generateContent(prompt: string): Promise<string> {
+       // Llamada a la API de OpenAI
+       return responseText;
+     }
+   }
+   ```
+2. Inyéctalo en `createContainer({ customAiService: new OpenAIService() })` en `container.ts`.
+3. Ningún caso de uso ni componente sufrirá modificaciones.
 
 ---
 

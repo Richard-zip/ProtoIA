@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, Menu } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // ├─┬─┬ dist
 // │ │ └── index.html
 // │ │
-// │ ├─┬ dist-electron
+// ├─┬ dist-electron
 // │ │ ├── main.js
 // │ │ └── preload.mjs
 // │
@@ -33,16 +33,26 @@ if (process.platform === 'win32') {
 let win: BrowserWindow | null
 
 function createWindow() {
+  Menu.setApplicationMenu(null)
+
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    title: 'Agnes',
+    icon: path.join(process.env.VITE_PUBLIC, 'images/agnes.png'),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
   })
 
+  win.removeMenu()
+
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
+  })
+
+  win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error(`Renderer failed to load (${errorCode}): ${errorDescription} - ${validatedURL}`)
   })
 
   if (VITE_DEV_SERVER_URL) {
