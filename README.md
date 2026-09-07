@@ -52,23 +52,6 @@ cd ProtoIA
 pnpm install
 ```
 
-### 3. Configurar variables de entorno
-
-Copia el archivo de ejemplo y añade tu API Key de Gemini:
-
-```bash
-cp example.env .env
-```
-
-Edita el archivo `.env` con tus valores:
-
-```env
-VITE_GEMINI_API_KEY=tu_api_key_aqui
-GEMINI_MODEL=gemini-2.5-flash
-APP_NAME=Agnes
-```
-
----
 
 ## ▶️ Ejecución en modo desarrollo
 
@@ -128,7 +111,7 @@ src/
 │   ├── export/                         # Adaptadores de formato (DocxProtocolExporter, XML helpers)
 │   ├── download/                       # Adaptador para navegador / DOM (BrowserFileDownloader)
 │   ├── logging/                        # Servicio de logs reactivo (EventLoggerService)
-│   ├── config/                         # Lectura tipada de variables de entorno
+│   ├── config/                         # Configuración y constantes del sistema
 │   └── di/                             # Contenedor de Inyección de Dependencias (Composition Root)
 │
 └── presentation/                       # CAPA DE PRESENTACIÓN (React)
@@ -213,18 +196,3 @@ src/
 2. Inyéctalo en `createContainer({ customAiService: new OpenAIService() })` en `container.ts`.
 3. Ningún caso de uso ni componente sufrirá modificaciones.
 
----
-
-## 🔑 Variables de entorno
-
-| Variable | Descripción | Requerida |
-|---|---|---|
-| `VITE_GEMINI_API_KEY` | API Key de Google Gemini | ✅ Sí |
-| `GEMINI_MODEL` | Modelo de Gemini a usar (ej. `gemini-2.5-flash`) | No (tiene valor por defecto) |
-| `APP_NAME` | Nombre de la aplicación | No |
-
----
-
-## 📄 Licencia
-
-Este proyecto es privado y de uso académico.

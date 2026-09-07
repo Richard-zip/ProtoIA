@@ -1,74 +1,45 @@
-import { app, ipcMain, shell, BrowserWindow, Menu } from "electron";
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-createRequire(import.meta.url);
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
-process.env.APP_ROOT = path.join(__dirname$1, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+import { app as s, ipcMain as m, shell as r, BrowserWindow as p, Menu as f } from "electron";
+import { createRequire as w } from "node:module";
+import { fileURLToPath as R } from "node:url";
+import o from "node:path";
+w(import.meta.url);
+const l = o.dirname(R(import.meta.url));
+process.env.APP_ROOT = o.join(l, "..");
+const i = process.env.VITE_DEV_SERVER_URL, u = o.join(process.env.APP_ROOT, "dist-electron"), c = o.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = i ? o.join(process.env.APP_ROOT, "public") : c;
 if (process.platform === "win32") {
-  const cacheDir = path.join(app.getPath("userData"), "cache");
-  app.setPath("cache", cacheDir);
+  const n = o.join(s.getPath("userData"), "cache");
+  s.setPath("cache", n);
 }
-let win;
-function createWindow() {
-  Menu.setApplicationMenu(null);
-  win = new BrowserWindow({
+let e;
+function d() {
+  f.setApplicationMenu(null), e = new p({
     title: "Agnes",
-    icon: path.join(process.env.VITE_PUBLIC, "images/agnes.png"),
-    autoHideMenuBar: true,
+    icon: o.join(process.env.VITE_PUBLIC, "images/agnes.png"),
+    autoHideMenuBar: !0,
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: o.join(l, "preload.mjs")
     }
-  });
-  win.removeMenu();
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith("https:") || url.startsWith("http:")) {
-      shell.openExternal(url);
-    }
-    return { action: "deny" };
-  });
-  win.webContents.on("will-navigate", (event, navigationUrl) => {
-    const isDevServer = VITE_DEV_SERVER_URL && navigationUrl.startsWith(VITE_DEV_SERVER_URL);
-    if (!isDevServer && (navigationUrl.startsWith("https:") || navigationUrl.startsWith("http:"))) {
-      event.preventDefault();
-      shell.openExternal(navigationUrl);
-    }
-  });
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
-  win.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
-    console.error(`Renderer failed to load (${errorCode}): ${errorDescription} - ${validatedURL}`);
-  });
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
+  }), e.removeMenu(), e.webContents.setWindowOpenHandler(({ url: n }) => ((n.startsWith("https:") || n.startsWith("http:")) && r.openExternal(n), { action: "deny" })), e.webContents.on("will-navigate", (n, t) => {
+    !(i && t.startsWith(i)) && (t.startsWith("https:") || t.startsWith("http:")) && (n.preventDefault(), r.openExternal(t));
+  }), e.webContents.on("did-finish-load", () => {
+    e == null || e.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  }), e.webContents.on("did-fail-load", (n, t, a, h) => {
+    console.error(`Renderer failed to load (${t}): ${a} - ${h}`);
+  }), i ? e.loadURL(i) : e.loadFile(o.join(c, "index.html"));
 }
-ipcMain.handle("open-external-url", async (_event, url) => {
-  if (typeof url === "string" && (url.startsWith("https:") || url.startsWith("http:"))) {
-    await shell.openExternal(url);
-  }
+m.handle("open-external-url", async (n, t) => {
+  typeof t == "string" && (t.startsWith("https:") || t.startsWith("http:")) && await r.openExternal(t);
 });
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
-  }
+s.on("window-all-closed", () => {
+  process.platform !== "darwin" && (s.quit(), e = null);
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+s.on("activate", () => {
+  p.getAllWindows().length === 0 && d();
 });
-app.whenReady().then(createWindow);
+s.whenReady().then(d);
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  u as MAIN_DIST,
+  c as RENDERER_DIST,
+  i as VITE_DEV_SERVER_URL
 };
