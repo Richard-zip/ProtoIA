@@ -120,30 +120,6 @@ src/
     └── ProtocolApp.tsx                 # Vista principal ensamblada
 ```
 
-### Cumplimiento de Principios SOLID
-
-1. **S - Single Responsibility Principle (Responsabilidad Única):**
-   - Cada clase o módulo tiene una sola razón para cambiar.
-   - `GeminiAIService` solo maneja la comunicación con la API de Gemini.
-   - `DocxProtocolExporter` y `DocxXmlHelper` solo gestionan la manipulación OOXML/Word.
-   - `IndividualProtocolStrategy` y `CollaborativeProtocolStrategy` solo encapsulan las reglas y prompts de su tipo de protocolo.
-   - `ProtocolForm`, `ProtocolPreview` y `ActivityLogs` son componentes de UI especializados.
-
-2. **O - Open/Closed Principle (Abierto para extensión, cerrado para modificación):**
-   - Para agregar un nuevo tipo de protocolo (ej. *Investigación*, *Tesis* o *Laboratorio*), **no necesitas modificar** las funciones existentes de generación, exportación ni los componentes de la interfaz. Solo creas una clase que implemente `IProtocolStrategy` y la registras en `ProtocolStrategyRegistry`.
-   - La interfaz de usuario lee dinámicamente las estrategias registradas y las muestra automáticamente en el selector.
-
-3. **L - Liskov Substitution Principle (Sustitución de Liskov):**
-   - Cualquier proveedor que implemente `IAIService` (ej. `GeminiAIService`, `MockAIService`, o un futuro `OpenAIService`) puede intercambiarse sin alterar el comportamiento de `GenerateProtocolUseCase`.
-   - Cualquier exportador que implemente `IDocumentExporter` (ej. `DocxProtocolExporter`, `MarkdownProtocolExporter`) es compatible con `ExportProtocolUseCase`.
-
-4. **I - Interface Segregation Principle (Segregación de Interfaces):**
-   - Interfaces pequeñas, cohesivas y específicas (`IAIService`, `IDocumentExporter`, `IFileDownloader`, `ILogger`, `IProtocolStrategy`), evitando interfaces sobrecargadas con métodos innecesarios.
-
-5. **D - Dependency Inversion Principle (Inversión de Dependencias):**
-   - Los casos de uso y componentes React **dependen de abstracciones** (interfaces), nunca de implementaciones concretas de librerías externas.
-   - La composición e instanciación se gestiona de forma centralizada en `src/infrastructure/di/container.ts`.
-
 ---
 
 ## 🚀 ¿Cómo agregar nuevas funcionalidades sin romper las existentes?
