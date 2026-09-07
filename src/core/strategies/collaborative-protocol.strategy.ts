@@ -17,18 +17,133 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
   extractSections(rawText: string, input: ProtocolStrategyInput): Record<string, string> {
     const headingMap: Array<[string, string[]]> = [
       ["title", ["PROTOCOLO COLABORATIVO", "PROTOCOLO COLABORATIVO -"]],
-      ["registro", ["REGISTRO DE PARTICIPANTES", "REGISTRO DE LOS PARTICIPANTES"]],
-      ["descripcion", ["DESCRIPCIÓN DEL TEXTO O ACTIVIDAD A REALIZAR", "DESCRIPCION DEL TEXTO O ACTIVIDAD A REALIZAR"]],
-      ["palabras", ["PALABRAS CLAVE", "PALABRAS CLAVES"]],
-      ["objetivos", ["OBJETIVOS DE LAS LECTURAS O ACTIVIDAD A REALIZAR", "OBJETIVOS DE LAS LECTURAS"]],
-      ["conceptos", ["CONCEPTOS CLAVE Y DEFINICIONES"]],
-      ["resumen", ["RESUMEN DE LAS DISCUSIONES GRUPALES"]],
-      ["encuentros", ["ENCUENTROS CONCEPTUALES"]],
-      ["desacuerdos", ["DESENCUENTROS CONCEPTUALES"]],
-      ["metodologia", ["METODOLOGÍA DE TRABAJO", "METODOLOGIA DE TRABAJO"]],
-      ["conclusiones", ["CONCLUSIONES"]],
-      ["recomendaciones", ["DISCUSIONES Y RECOMENDACIONES"]],
-      ["bibliografia", ["BIBLIOGRAFÍA", "BIBLIOGRAFIA"]],
+      [
+        "registro",
+        [
+          "REGISTRO DE PARTICIPANTES",
+          "REGISTRO DE LOS PARTICIPANTES",
+          "PARTICIPANTES",
+          "INTEGRANTES",
+          "REGISTRO DE INTEGRANTES",
+        ],
+      ],
+      [
+        "descripcion",
+        [
+          "DESCRIPCIÓN DEL TEXTO O ACTIVIDAD A REALIZAR",
+          "DESCRIPCION DEL TEXTO O ACTIVIDAD A REALIZAR",
+          "DESCRIPCIÓN DE LA ACTIVIDAD",
+          "DESCRIPCION DE LA ACTIVIDAD",
+          "DESCRIPCIÓN DEL TEXTO",
+          "DESCRIPCION DEL TEXTO",
+        ],
+      ],
+      [
+        "palabras",
+        [
+          "PALABRAS CLAVE",
+          "PALABRAS CLAVES",
+          "PALABRAS CLAVE Y TÉRMINOS",
+          "PALABRAS CLAVE Y TERMINOS",
+        ],
+      ],
+      [
+        "objetivos",
+        [
+          "OBJETIVOS DE LAS LECTURAS O ACTIVIDAD A REALIZAR",
+          "OBJETIVOS DE LAS LECTURAS O ACTIVIDAD",
+          "OBJETIVOS DE LAS LECTURAS",
+          "OBJETIVOS DE LA ACTIVIDAD",
+          "OBJETIVOS",
+        ],
+      ],
+      [
+        "conceptos",
+        [
+          "CONCEPTOS CLAVE Y DEFINICIONES",
+          "CONCEPTOS CLAVES Y DEFINICIONES",
+          "CONCEPTOS CLAVE",
+          "CONCEPTOS CLAVES",
+          "CONCEPTOS Y DEFINICIONES",
+          "DEFINICIONES Y CONCEPTOS",
+          "DEFINICIONES",
+        ],
+      ],
+      [
+        "resumen",
+        [
+          "RESUMEN DE LAS DISCUSIONES GRUPALES",
+          "RESUMEN DE DISCUSIONES GRUPALES",
+          "RESUMEN DE LAS DISCUSIONES",
+          "RESUMEN DE DISCUSIONES",
+          "RESUMEN GRUPAL",
+          "DISCUSIONES GRUPALES",
+        ],
+      ],
+      [
+        "encuentros",
+        [
+          "ENCUENTROS CONCEPTUALES",
+          "ENCUENTROS",
+          "PUNTOS DE ENCUENTRO",
+          "ACUERDOS CONCEPTUALES",
+          "PUNTOS DE ACUERDO",
+        ],
+      ],
+      [
+        "desacuerdos",
+        [
+          "DESENCUENTROS CONCEPTUALES",
+          "DESENCUENTROS",
+          "DESACUERDOS CONCEPTUALES",
+          "DESACUERDOS",
+          "PUNTOS DE DESENCUENTRO",
+          "PUNTOS DE DESACUERDO",
+        ],
+      ],
+      [
+        "metodologia",
+        [
+          "METODOLOGÍA DE TRABAJO (CÓMO SE HIZO LA ACTIVIDAD COLABORATIVA)",
+          "METODOLOGIA DE TRABAJO (CÓMO SE HIZO LA ACTIVIDAD COLABORATIVA)",
+          "METODOLOGÍA DE TRABAJO (COMO SE HIZO LA ACTIVIDAD COLABORATIVA)",
+          "METODOLOGÍA DE TRABAJO",
+          "METODOLOGIA DE TRABAJO",
+          "METODOLOGÍA",
+          "METODOLOGIA",
+        ],
+      ],
+      [
+        "conclusiones",
+        [
+          "CONCLUSIONES DE LA LECTURA O ACTIVIDAD",
+          "CONCLUSIONES",
+          "CONCLUSION",
+        ],
+      ],
+      [
+        "recomendaciones",
+        [
+          "DISCUSIONES Y RECOMENDACIONES",
+          "DISCUSION Y RECOMENDACIONES",
+          "PREGUNTAS DE DISCUSIÓN",
+          "PREGUNTAS PARA DISCUSIÓN",
+          "PREGUNTAS PARA DISCUSION",
+          "RECOMENDACIONES Y DISCUSIONES",
+          "RECOMENDACIONES",
+        ],
+      ],
+      [
+        "bibliografia",
+        [
+          "BIBLIOGRAFÍA",
+          "BIBLIOGRAFIA",
+          "REFERENCIAS BIBLIOGRÁFICAS",
+          "REFERENCIAS BIBLIOGRAFICAS",
+          "REFERENCIAS",
+          "FUENTES CONSULTADAS",
+        ],
+      ],
     ];
 
     const sections = this.extractByHeadingMap(rawText, headingMap);
@@ -40,6 +155,17 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
     const fallbackTemas = input.temas.filter(Boolean).join("\n");
     const firstTema = input.temas.filter(Boolean)[0] || "el tema";
 
+    const rawConceptos = sections.conceptos || `Conceptos principales relacionados con ${firstTema}.`;
+    const rawObjetivos =
+      sections.objetivos ||
+      `**Objetivo General:** Comprender ${firstTema} mediante el análisis de ${input.temas.filter(Boolean).slice(1, 3).join(" y ") || "los contenidos del curso"}.`;
+    const rawRecomendaciones =
+      sections.recomendaciones ||
+      "**Pregunta 1:** ¿En qué escenarios resulta más conveniente priorizar la simplicidad frente a la extensibilidad?\n\n**Pregunta 2:** ¿Cómo impacta el trabajo colaborativo en la calidad final del software?";
+    const rawMetodologia = (sections.metodologia || "")
+      .replace(/\s*\(Usar SIEMPRE[\s\S]*?\)/gi, "")
+      .trim();
+
     const result: Record<string, string> = {
       title: `PROTOCOLO COLABORATIVO - ${input.materia || "Materia"}`,
       registro: sections.registro || fallbackParticipants || "Participantes por definir",
@@ -49,10 +175,8 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
       palabras:
         sections.palabras ||
         ["protocolo", "colaborativo", ...input.temas.filter(Boolean).slice(0, 6)].join(", "),
-      objetivos:
-        sections.objetivos ||
-        `Comprender ${firstTema} mediante el análisis de ${input.temas.filter(Boolean).slice(1, 3).join(" y ") || "los contenidos del curso"}.`,
-      conceptos: sections.conceptos || `Conceptos principales relacionados con ${firstTema}.`,
+      objetivos: this.formatObjectives(rawObjetivos),
+      conceptos: this.formatConceptDefinitions(rawConceptos),
       resumen:
         sections.resumen ||
         `Se analizaron los aspectos más relevantes de ${firstTema} mediante discusión colaborativa.`,
@@ -63,14 +187,12 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
         sections.desacuerdos ||
         "Se identificaron diferencias sobre la aplicación práctica de ciertas decisiones de diseño.",
       metodologia:
-        sections.metodologia ||
+        rawMetodologia ||
         "La actividad se desarrolló mediante investigación individual, discusión grupal y consolidación conjunta.",
       conclusiones:
         sections.conclusiones ||
         `Se concluyó que ${firstTema} requiere un análisis integral y una aplicación práctica sostenida.`,
-      recomendaciones:
-        sections.recomendaciones ||
-        "Se recomienda profundizar en los temas tratados y contrastar distintas alternativas de solución.",
+      recomendaciones: this.formatRecommendations(rawRecomendaciones),
       bibliografia: sections.bibliografia || "Bibliografía por completar.",
       temas: fallbackTemas || "Temas por definir",
     };

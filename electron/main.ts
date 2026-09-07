@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from 'electron'
+import { app, BrowserWindow, Menu, shell, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -46,6 +46,22 @@ function createWindow() {
 
   win.removeMenu()
 
+  // Bloquear navegación interna a sitios web externos y abrirlos en el navegador predeterminado del sistema
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https:') || url.startsWith('http:')) {
+      shell.openExternal(url)
+    }
+    return { action: 'deny' }
+  })
+
+  win.webContents.on('will-navigate', (event, navigationUrl) => {
+    const isDevServer = VITE_DEV_SERVER_URL && navigationUrl.startsWith(VITE_DEV_SERVER_URL)
+    if (!isDevServer && (navigationUrl.startsWith('https:') || navigationUrl.startsWith('http:'))) {
+      event.preventDefault()
+      shell.openExternal(navigationUrl)
+    }
+  })
+
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
@@ -62,6 +78,13 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 }
+
+// Canal IPC seguro para abrir enlaces externos desde el proceso de renderizado
+ipcMain.handle('open-external-url', async (_event, url: string) => {
+  if (typeof url === 'string' && (url.startsWith('https:') || url.startsWith('http:'))) {
+    await shell.openExternal(url)
+  }
+})
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

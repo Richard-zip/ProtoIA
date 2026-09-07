@@ -22,3 +22,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   // You can expose other APTs you need here.
   // ...
 })
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  openExternal: (url: string) => ipcRenderer.invoke('open-external-url', url),
+})

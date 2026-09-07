@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from "electron";
+import { app, ipcMain, shell, BrowserWindow, Menu } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -25,6 +25,19 @@ function createWindow() {
     }
   });
   win.removeMenu();
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("https:") || url.startsWith("http:")) {
+      shell.openExternal(url);
+    }
+    return { action: "deny" };
+  });
+  win.webContents.on("will-navigate", (event, navigationUrl) => {
+    const isDevServer = VITE_DEV_SERVER_URL && navigationUrl.startsWith(VITE_DEV_SERVER_URL);
+    if (!isDevServer && (navigationUrl.startsWith("https:") || navigationUrl.startsWith("http:"))) {
+      event.preventDefault();
+      shell.openExternal(navigationUrl);
+    }
+  });
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
@@ -37,6 +50,11 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
 }
+ipcMain.handle("open-external-url", async (_event, url) => {
+  if (typeof url === "string" && (url.startsWith("https:") || url.startsWith("http:"))) {
+    await shell.openExternal(url);
+  }
+});
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();

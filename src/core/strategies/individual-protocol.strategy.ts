@@ -16,29 +16,117 @@ export class IndividualProtocolStrategy extends BaseProtocolStrategy {
   extractSections(rawText: string, input: ProtocolStrategyInput): Record<string, string> {
     const headingMap: Array<[string, string[]]> = [
       ["title", ["PROTOCOLO INDIVIDUAL", "PROTOCOLO INDIVIDUAL -"]],
-      ["descripcion", ["DESCRIPCIÓN DEL TEXTO O ACTIVIDAD A REALIZAR", "DESCRIPCION DEL TEXTO O ACTIVIDAD A REALIZAR"]],
-      ["palabras", ["PALABRAS CLAVE", "PALABRAS CLAVES"]],
-      ["objetivos", ["OBJETIVOS DE LAS LECTURAS O ACTIVIDAD A REALIZAR", "OBJETIVOS DE LAS LECTURAS"]],
-      ["conceptos", ["CONCEPTOS CLAVE Y DEFINICIONES"]],
-      ["resumen", ["RESUMEN DE LAS LECTURAS", "RESUMEN DE LAS LECTURAS O ACTIVIDAD"]],
+      [
+        "descripcion",
+        [
+          "DESCRIPCIÓN DEL TEXTO O ACTIVIDAD A REALIZAR",
+          "DESCRIPCION DEL TEXTO O ACTIVIDAD A REALIZAR",
+          "DESCRIPCIÓN DE LA ACTIVIDAD",
+          "DESCRIPCION DE LA ACTIVIDAD",
+          "DESCRIPCIÓN DEL TEXTO",
+          "DESCRIPCION DEL TEXTO",
+        ],
+      ],
+      [
+        "palabras",
+        [
+          "PALABRAS CLAVE",
+          "PALABRAS CLAVES",
+          "PALABRAS CLAVE Y TÉRMINOS",
+          "PALABRAS CLAVE Y TERMINOS",
+        ],
+      ],
+      [
+        "objetivos",
+        [
+          "OBJETIVOS DE LAS LECTURAS O ACTIVIDAD A REALIZAR",
+          "OBJETIVOS DE LAS LECTURAS O ACTIVIDAD",
+          "OBJETIVOS DE LAS LECTURAS",
+          "OBJETIVOS DE LA ACTIVIDAD",
+          "OBJETIVOS",
+        ],
+      ],
+      [
+        "conceptos",
+        [
+          "CONCEPTOS CLAVE Y DEFINICIONES",
+          "CONCEPTOS CLAVES Y DEFINICIONES",
+          "CONCEPTOS CLAVE",
+          "CONCEPTOS CLAVES",
+          "CONCEPTOS Y DEFINICIONES",
+          "DEFINICIONES Y CONCEPTOS",
+          "DEFINICIONES",
+        ],
+      ],
+      [
+        "resumen",
+        [
+          "RESUMEN DE LAS LECTURAS",
+          "RESUMEN DE LAS LECTURAS O ACTIVIDAD",
+          "RESUMEN DE LA LECTURA O ACTIVIDAD",
+          "RESUMEN DE LA LECTURA",
+          "RESUMEN DE LECTURAS",
+          "RESUMEN",
+        ],
+      ],
       [
         "metodologia",
         [
-          "METODOLOGÍA DE TRABAJO",
-          "METODOLOGIA DE TRABAJO",
           "METODOLOGÍA DE TRABAJO (CÓMO REALICÉ LA ACTIVIDAD)",
           "METODOLOGIA DE TRABAJO (CÓMO REALICÉ LA ACTIVIDAD)",
+          "METODOLOGÍA DE TRABAJO (COMO REALICE LA ACTIVIDAD)",
+          "METODOLOGÍA DE TRABAJO",
+          "METODOLOGIA DE TRABAJO",
+          "METODOLOGÍA",
+          "METODOLOGIA",
         ],
       ],
-      ["conclusiones", ["CONCLUSIONES"]],
-      ["recomendaciones", ["DISCUSIONES Y RECOMENDACIONES"]],
-      ["bibliografia", ["BIBLIOGRAFÍA", "BIBLIOGRAFIA"]],
+      [
+        "conclusiones",
+        [
+          "CONCLUSIONES DE LA LECTURA O ACTIVIDAD",
+          "CONCLUSIONES",
+          "CONCLUSION",
+        ],
+      ],
+      [
+        "recomendaciones",
+        [
+          "DISCUSIONES Y RECOMENDACIONES",
+          "DISCUSION Y RECOMENDACIONES",
+          "PREGUNTAS DE DISCUSIÓN",
+          "PREGUNTA PARA DISCUSIÓN",
+          "PREGUNTAS PARA DISCUSIÓN",
+          "PREGUNTA PARA DISCUSION",
+          "RECOMENDACIONES Y DISCUSIONES",
+          "RECOMENDACIONES",
+        ],
+      ],
+      [
+        "bibliografia",
+        [
+          "BIBLIOGRAFÍA",
+          "BIBLIOGRAFIA",
+          "REFERENCIAS BIBLIOGRÁFICAS",
+          "REFERENCIAS BIBLIOGRAFICAS",
+          "REFERENCIAS",
+          "FUENTES CONSULTADAS",
+        ],
+      ],
     ];
 
     const sections = this.extractByHeadingMap(rawText, headingMap);
 
     const fallbackTemas = input.temas.filter(Boolean).join("\n");
     const firstTema = input.temas.filter(Boolean)[0] || "el tema";
+
+    const rawConceptos = sections.conceptos || `Conceptos principales relacionados con ${firstTema}.`;
+    const rawObjetivos =
+      sections.objetivos ||
+      `**Objetivo General:** Comprender ${firstTema} mediante el análisis de ${input.temas.filter(Boolean).slice(1, 3).join(" y ") || "los contenidos del curso"}.`;
+    const rawRecomendaciones =
+      sections.recomendaciones ||
+      "**Pregunta para discusión:** ¿En qué medida los conceptos analizados pueden ser aplicados directamente en proyectos reales?";
 
     const result: Record<string, string> = {
       title: `PROTOCOLO INDIVIDUAL - ${input.materia || "Materia"}`,
@@ -48,10 +136,8 @@ export class IndividualProtocolStrategy extends BaseProtocolStrategy {
       palabras:
         sections.palabras ||
         ["protocolo", "individual", ...input.temas.filter(Boolean).slice(0, 6)].join(", "),
-      objetivos:
-        sections.objetivos ||
-        `Comprender ${firstTema} mediante el análisis de ${input.temas.filter(Boolean).slice(1, 3).join(" y ") || "los contenidos del curso"}.`,
-      conceptos: sections.conceptos || `Conceptos principales relacionados con ${firstTema}.`,
+      objetivos: this.formatObjectives(rawObjetivos),
+      conceptos: this.formatConceptDefinitions(rawConceptos),
       resumen:
         sections.resumen ||
         `Se analizaron los aspectos más relevantes de ${firstTema} mediante lectura y reflexión personal.`,
@@ -61,9 +147,7 @@ export class IndividualProtocolStrategy extends BaseProtocolStrategy {
       conclusiones:
         sections.conclusiones ||
         `Se concluyó que ${firstTema} requiere un análisis integral y una aplicación práctica sostenida.`,
-      recomendaciones:
-        sections.recomendaciones ||
-        "Se recomienda profundizar en los temas tratados y contrastar distintas alternativas de solución.",
+      recomendaciones: this.formatRecommendations(rawRecomendaciones),
       bibliografia: sections.bibliografia || "Bibliografía por completar.",
       temas: fallbackTemas || "Temas por definir",
     };

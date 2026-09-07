@@ -4,6 +4,7 @@ import {
   AVAILABLE_MODELS,
   testGeminiConnection,
 } from "../../infrastructure/config/ai-settings.service";
+import { openExternalLink } from "../utils/open-external";
 
 export interface AISettingsModalProps {
   isOpen: boolean;
@@ -218,12 +219,11 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
                 ¿No tienes una API Key? Es gratuita y se obtiene en segundos.
               </span>
               <div className="helper-links">
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="helper-link"
-                  title="Abrir Google AI Studio en el navegador"
+                <button
+                  type="button"
+                  className="helper-link-btn"
+                  onClick={() => openExternalLink("https://aistudio.google.com/app/apikey")}
+                  title="Abrir Google AI Studio en tu navegador externo"
                 >
                   <span>Google AI Studio</span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -231,7 +231,7 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
                   </svg>
-                </a>
+                </button>
                 <button
                   type="button"
                   className="copy-url-btn"
@@ -242,6 +242,9 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
                 </button>
               </div>
             </div>
+            <p className="external-browser-hint">
+              Se abrirá en tu navegador externo para que inicies sesión con Google y copies tu clave de forma segura.
+            </p>
           </div>
 
           {/* Campo Modelo de Gemini */}

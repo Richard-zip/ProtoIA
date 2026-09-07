@@ -10,6 +10,13 @@ import { ExportProtocolUseCase } from "../src/application/use-cases/export-proto
 import { IDocumentExporter, ExportFile } from "../src/core/interfaces/document-exporter.interface.ts";
 import { IFileDownloader } from "../src/core/interfaces/file-downloader.interface.ts";
 import { Protocol } from "../src/core/entities/protocol.entity.ts";
+import {
+  appendColonIfMissing,
+  buildParagraphsXml,
+  insertContentInCell,
+  splitLabelOrListMarker,
+  stripTags,
+} from "../src/infrastructure/export/helpers/docx-xml.helper.ts";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -157,6 +164,153 @@ async function runVerification() {
   // -------------------------------------------------------------
   console.log("\n--- TEST 5: Logger reactivo desacoplado ---");
   assert(logsReceived.length > 5, `El logger reactivo capturó ${logsReceived.length} eventos de log correctamente`);
+
+  // -------------------------------------------------------------
+  // Test 6: Formato de conceptos con negrilla y dos puntos, y eliminación de espacios en docx
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 6: Formato de Conceptos con Negrilla, Dos Puntos y Limpieza de Espacios ---");
+
+  // 6.1: Conceptos en protocolo colaborativo
+  assert(
+    colabResult.extractedFields.conceptos.includes("**Arquitectura de software:**"),
+    "Los conceptos en protocolo colaborativo contienen el nombre en negrilla con asteriscos y dos puntos"
+  );
+  assert(
+    colabResult.extractedFields.conceptos.includes("**Principios SOLID:**"),
+    "Principios SOLID está en negrilla y seguido de dos puntos"
+  );
+
+  // 6.2: Conceptos en protocolo individual
+  assert(
+    individualResult.extractedFields.conceptos.includes("**Encapsulamiento:**"),
+    "Los conceptos en protocolo individual contienen el nombre en negrilla con asteriscos y dos puntos"
+  );
+  assert(
+    individualResult.extractedFields.conceptos.includes("**Polimorfismo:**"),
+    "Polimorfismo está en negrilla y seguido de dos puntos"
+  );
+
+  // 6.3: Objetivos y Recomendaciones compactados sin saltos excesivos
+  assert(
+    colabResult.extractedFields.objetivos.includes("**Objetivo General:**"),
+    "Objetivo General está compactado en una sola línea en negrilla con dos puntos"
+  );
+  assert(
+    colabResult.extractedFields.recomendaciones.includes("**Pregunta 1:**"),
+    "Pregunta 1 en recomendaciones está en negrilla y seguida de dos puntos"
+  );
+
+  // 6.4: splitLabelOrListMarker conserva los dos puntos en el label
+  const splitTest1 = splitLabelOrListMarker("**Arquitectura de software:** Estructura fundamental");
+  assert(splitTest1 !== null && splitTest1.label === "Arquitectura de software:", "splitLabelOrListMarker extrae label con dos puntos");
+  const splitTest2 = splitLabelOrListMarker("1. **Concepto Clave:** Descripción");
+  assert(splitTest2 !== null && splitTest2.label === "1. Concepto Clave:", "splitLabelOrListMarker maneja numeración y dos puntos");
+
+  // 6.5: appendColonIfMissing no produce '.:' en encabezados con punto final
+  const headingWithDot = '<w:p><w:r><w:t xml:space="preserve">Palabras claves.</w:t></w:r></w:p>';
+  const fixedHeading = appendColonIfMissing(headingWithDot);
+  assert(
+    stripTags(fixedHeading) === "Palabras claves:",
+    "appendColonIfMissing reemplaza el punto final por dos puntos sin producir '.:'"
+  );
+
+  // 6.6: insertContentInCell descarta párrafos vacíos sobrantes en la plantilla
+  const cellWithTrailingEmpty =
+    '<w:tc><w:p><w:r><w:t>Registro de los participantes</w:t></w:r></w:p><w:p><w:r><w:t></w:t></w:r></w:p></w:tc>';
+  const resultCell = insertContentInCell(
+    cellWithTrailingEmpty,
+    "Registro de los participantes",
+    "Estudiante Uno\nEstudiante Dos"
+  );
+  const paragraphCount = (resultCell.match(/<w:p\b/g) || []).length;
+  assert(
+    paragraphCount === 3,
+    `insertContentInCell descarta párrafos vacíos sobrantes (esperados 3: encabezado + 2 estudiantes, obtenidos ${paragraphCount})`
+  );
+
+  // 6.7: buildParagraphsXml produce etiquetas bold con colon en el XML
+  const paragraphsXml = buildParagraphsXml("**Concepto:** Definición con **término** en negrita.");
+  assert(paragraphsXml.includes("<w:b/>"), "buildParagraphsXml incluye etiqueta <w:b/> para texto en negrita");
+  assert(paragraphsXml.includes("Concepto:"), "buildParagraphsXml incluye el concepto con dos puntos");
+
+  // 6.8: Extracción robusta de protocolo colaborativo con markdown de Gemini (##, **, etc.)
+  const mockGeminiMarkdown = `
+# PROTOCOLO COLABORATIVO - SEGURIDAD INFORMÁTICA
+
+## REGISTRO DE PARTICIPANTES
+Richard Assis
+Maria Ines Arrieta
+
+## DESCRIPCIÓN DEL TEXTO O ACTIVIDAD A REALIZAR
+En este protocolo colaborativo se aborda la seguridad informatica y el pentesting...
+
+## PALABRAS CLAVE
+pentesting, caja blanca, caja negra, owasp, red, vulnerabilidades, exploit, seguridad
+
+## OBJETIVOS DE LAS LECTURAS O ACTIVIDAD A REALIZAR
+**Objetivo General:** Comprender las fases del pentesting mediante el analisis de pruebas de caja blanca y caja negra.
+
+**Objetivos Específicos:**
+1. Identificar las vulnerabilidades mas criticas del OWASP Top 10.
+2. Comparar metodologias de caja blanca y caja negra.
+3. Evaluar vectores de ataque en redes corporativas.
+
+## CONCEPTOS CLAVES Y DEFINICIONES
+**Pentesting:** Evaluacion de la seguridad mediante simulacion de ataques reales.
+**Caja Blanca:** Tipo de prueba donde el atacante conoce el codigo y arquitectura.
+**OWASP Top 10:** Documento estandar que enumera los diez riesgos mas criticos.
+
+## RESUMEN DE LAS DISCUSIONES GRUPALES
+- Pentesting Automático vs Manual: Discutimos la efectividad de herramientas automatizadas...
+- Ética en Pruebas de Intrusión: Concordamos en la necesidad de contratos de confidencialidad...
+
+## ENCUENTROS CONCEPTUALES
+- Todos concordamos en que la caja blanca permite mayor cobertura de codigo.
+- Hubo acuerdo unánime en que OWASP Top 10 debe ser el punto de partida.
+
+## DESENCUENTROS CONCEPTUALES
+- Uso de herramientas propietarias vs open source: Postura comercial vs postura comunitaria.
+
+## METODOLOGÍA DE TRABAJO (CÓMO SE HIZO LA ACTIVIDAD COLABORATIVA)
+Para realizar esta actividad colaborativa dividimos los temas entre los dos integrantes...
+
+## CONCLUSIONES
+Después de estudiar y discutir colaborativamente seguridad informatica, concluimos que el pentesting es clave...
+
+## DISCUSIONES Y RECOMENDACIONES
+**Pregunta 1:** ¿En qué medida es etico realizar pruebas de penetracion sin autorizacion previa en sistemas publicos?
+**Pregunta 2:** ¿Como balancear el tiempo de analisis de caja blanca con los costos operativos?
+
+## BIBLIOGRAFÍA
+1. Scambray, J. (2018). Hacking Exposed.
+2. OWASP Foundation. (2021). OWASP Top Ten.
+`;
+
+  const colabStrategy = new CollaborativeProtocolStrategy();
+  const extractedColab = colabStrategy.extractSections(mockGeminiMarkdown, {
+    materia: "Seguridad Informática",
+    temas: ["Pentesting", "Caja Blanca", "OWASP Top 10"],
+    participantes: ["Richard Assis", "Maria Ines Arrieta"],
+    tipo: "colaborativo",
+  });
+
+  assert(
+    extractedColab.conceptos.includes("**Pentesting:**") &&
+    extractedColab.conceptos.includes("**Caja Blanca:**"),
+    "Las secciones de conceptos con markdown ('## CONCEPTOS CLAVES Y DEFINICIONES') se extraen correctamente"
+  );
+  assert(
+    extractedColab.resumen.includes("Pentesting Automático vs Manual"),
+    "El resumen de discusiones grupales se extrae correctamente sin caer en fallback"
+  );
+  assert(
+    extractedColab.encuentros.includes("Todos concordamos en que la caja blanca"),
+    "Los encuentros conceptuales se extraen del markdown de Gemini"
+  );
+  assert(
+    extractedColab.recomendaciones.includes("**Pregunta 1:** ¿En qué medida es etico"),
+    "Las discusiones y recomendaciones se extraen del markdown de Gemini"
+  );
 
   console.log("\n🎉 TODAS LAS VERIFICACIONES DE ARQUITECTURA Y PRINCIPIOS SOLID PASARON EXITOSAMENTE.");
 }

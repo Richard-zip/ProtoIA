@@ -39,6 +39,11 @@ export function appendColonIfMissing(paragraphXml: string): string {
   const text = stripTags(paragraphXml).trim();
   if (/:$/.test(text)) return paragraphXml;
 
+  // If heading ends with a dot inside the last <w:t>, replace that dot with a colon
+  if (/[.]\s*<\/w:t>/.test(paragraphXml)) {
+    return paragraphXml.replace(/[.](\s*<\/w:t>(?![\s\S]*<w:t>))/, ":$1");
+  }
+
   // Try to reuse the last run's rPr if present so the colon matches styling.
   const runMatches = paragraphXml.match(/<w:r\b[^>]*>[\s\S]*?<\/w:r>/g) || [];
   let rPr = "";
@@ -50,7 +55,7 @@ export function appendColonIfMissing(paragraphXml: string): string {
     }
   }
 
-  const colonRun = `<w:r>${rPr}<w:t xml:space="preserve">:</w:t></w:r>`;
+  const colonRun = `<w:r>${rPr}<w:t>:</w:t></w:r>`;
   return paragraphXml.replace(/<\/w:p>\s*$/, `${colonRun}</w:p>`);
 }
 
@@ -65,6 +70,16 @@ export function extractParagraphStyles(headingParagraph: string): { pPr: string;
   // The paragraph properties carry an <w:rPr> for the paragraph mark; strip it
   // so we can build a clean run-level rPr from the actual run instead.
   pPr = pPr.replace(/<w:rPr>[\s\S]*?<\/w:rPr>/g, "").replace(/<w:b\b[^>]*\/>/g, "");
+
+  // Set clean compact paragraph spacing to avoid excessive blank vertical gaps
+  const compactSpacing = '<w:spacing w:line="360" w:lineRule="auto" w:before="0" w:after="40" />';
+  if (/<w:spacing\b[^>]*\/>/.test(pPr)) {
+    pPr = pPr.replace(/<w:spacing\b[^>]*\/>/, compactSpacing);
+  } else if (pPr.endsWith("</w:pPr>")) {
+    pPr = pPr.replace(/<\/w:pPr>$/, `${compactSpacing}</w:pPr>`);
+  } else {
+    pPr = `<w:pPr>${compactSpacing}</w:pPr>`;
+  }
 
   // Prefer the run properties from the first run that carries font info.
   const runMatches = headingParagraph.match(/<w:r\b[^>]*>[\s\S]*?<\/w:r>/g) || [];
@@ -110,18 +125,48 @@ export function makeBoldRPr(rPr: string): string {
 }
 
 export function splitLabel(paragraph: string): { label: string; rest: string } | null {
-  const colonIndex = paragraph.indexOf(":");
-  if (colonIndex === -1) {
-    return null;
+  const trimmed = paragraph.trim();
+  if (!trimmed) return null;
+
+  // Case A: Markdown bold concept/term at start:
+  // e.g. **Concepto:** Def, **Concepto**: Def, 1. **Concepto:** Def, - **Concepto:** Def
+  const boldMatch = trimmed.match(
+    /^((?:(?:\d+[.)]|[-*•])\s+)?)\*\*([^*\n]+?)\*\*(?::\s*|\s*:\s*)?(.*)$/
+  );
+  if (boldMatch) {
+    const marker = boldMatch[1] || "";
+    let term = boldMatch[2].trim();
+    if (term.endsWith(":")) {
+      term = term.slice(0, -1).trim();
+    }
+    const rest = (boldMatch[3] || "").trim();
+    return {
+      label: `${marker}${term}:`,
+      rest,
+    };
   }
 
-  const label = paragraph.slice(0, colonIndex).trim();
-  if (label.length === 0 || label.length > 60 || /[.!?]/.test(label)) {
-    return null;
+  // Case B: Plain colon label: e.g. "Concepto: Def", "1. Concepto: Def", "- Concepto: Def"
+  const colonIndex = trimmed.indexOf(":");
+  if (colonIndex !== -1) {
+    const rawLabel = trimmed.slice(0, colonIndex).trim();
+    const labelWithoutMarker = rawLabel.replace(/^(?:\d+[.)]|[-*•])\s+/, "").trim();
+    if (
+      labelWithoutMarker.length > 0 &&
+      labelWithoutMarker.length <= 70 &&
+      labelWithoutMarker.split(/\s+/).length <= 10 &&
+      !/[?!]/.test(labelWithoutMarker) &&
+      !/[.]{2,}/.test(labelWithoutMarker)
+    ) {
+      const rest = trimmed.slice(colonIndex + 1).trim();
+      return {
+        label: `${rawLabel}:`,
+        rest,
+      };
+    }
   }
 
-  const rest = paragraph.slice(colonIndex + 1).trim();
-  return { label, rest };
+  return null;
 }
 
 export function splitLabelOrListMarker(paragraph: string): { label: string; rest: string } | null {
@@ -130,7 +175,7 @@ export function splitLabelOrListMarker(paragraph: string): { label: string; rest
     return label;
   }
 
-  const match = paragraph.match(/^\s*(\d+[.)])\s+(.*)$/);
+  const match = paragraph.match(/^\s*(\d+[.)]|[-*•])\s+(.*)$/);
   if (!match) {
     return null;
   }
@@ -139,6 +184,25 @@ export function splitLabelOrListMarker(paragraph: string): { label: string; rest
     label: match[1],
     rest: match[2].trim(),
   };
+}
+
+export function formatRunsXml(text: string, rPr: string, boldRPr: string): string {
+  if (!text) return "";
+
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  let xml = "";
+
+  for (const part of parts) {
+    if (!part) continue;
+    if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
+      const content = part.slice(2, -2);
+      xml += `<w:r>${boldRPr}<w:t xml:space="preserve">${escapeXml(content)}</w:t></w:r>`;
+    } else {
+      xml += `<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(part)}</w:t></w:r>`;
+    }
+  }
+
+  return xml;
 }
 
 export function buildParagraphsXml(text: string, styles?: { pPr: string; rPr: string }): string {
@@ -159,15 +223,12 @@ export function buildParagraphsXml(text: string, styles?: { pPr: string; rPr: st
     .map((paragraph) => {
       const label = splitLabelOrListMarker(paragraph);
       if (label) {
-        const boldRun = `<w:r>${boldRPr}<w:t xml:space="preserve">${escapeXml(`${label.label}`)}</w:t></w:r>`;
-        const restRun = label.rest
-          ? `<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(` ${label.rest}`)}</w:t></w:r>`
-          : "";
-        return `<w:p>${pPr}${boldRun}${restRun}</w:p>`;
+        const boldRun = `<w:r>${boldRPr}<w:t xml:space="preserve">${escapeXml(label.label)}</w:t></w:r>`;
+        const restRuns = label.rest ? formatRunsXml(` ${label.rest}`, rPr, boldRPr) : "";
+        return `<w:p>${pPr}${boldRun}${restRuns}</w:p>`;
       }
 
-      const safeText = escapeXml(paragraph);
-      return `<w:p>${pPr}<w:r>${rPr}<w:t xml:space="preserve">${safeText}</w:t></w:r></w:p>`;
+      return `<w:p>${pPr}${formatRunsXml(paragraph, rPr, boldRPr)}</w:p>`;
     })
     .join("");
 }
@@ -203,7 +264,11 @@ export function insertContentInCell(cellXml: string, heading: string | string[],
       const styles = extractParagraphStyles(paragraphWithColon);
       parts.push(paragraphWithColon + buildParagraphsXml(content, styles));
     } else {
-      parts.push(paragraph);
+      // Discard empty template paragraphs that follow after content injection
+      const isEmpty = stripTags(paragraph).trim().length === 0;
+      if (!injected || !isEmpty) {
+        parts.push(paragraph);
+      }
     }
 
     lastIndex = paragraphRegex.lastIndex;

@@ -207,9 +207,19 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
                   <h4 className="protocol-section-title">{section.title}</h4>
                 </header>
                 <div className="protocol-section-body">
-                  {section.body.map((paragraph, paragraphIndex) => (
-                    <p key={`${paragraphIndex}-${paragraph.substring(0, 15)}`}>{paragraph}</p>
-                  ))}
+                  {section.body.map((paragraph, paragraphIndex) => {
+                    const parts = paragraph.split(/(\*\*.*?\*\*)/g);
+                    return (
+                      <p key={`${paragraphIndex}-${paragraph.substring(0, 15)}`}>
+                        {parts.map((part, partIdx) => {
+                          if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
+                            return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+                          }
+                          return part;
+                        })}
+                      </p>
+                    );
+                  })}
                 </div>
               </article>
             ))}
