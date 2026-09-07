@@ -10,6 +10,7 @@ import { ExportProtocolUseCase } from "../src/application/use-cases/export-proto
 import { IDocumentExporter, ExportFile } from "../src/core/interfaces/document-exporter.interface.ts";
 import { IFileDownloader } from "../src/core/interfaces/file-downloader.interface.ts";
 import { Protocol } from "../src/core/entities/protocol.entity.ts";
+import { PdfProtocolExporter } from "../src/infrastructure/export/pdf-protocol.exporter.ts";
 import {
   appendColonIfMissing,
   buildParagraphsXml,
@@ -418,6 +419,50 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
   assert(
     formattedConcepts.includes("**Fases de un pentesting:**"),
     "formatConceptDefinitions convierte términos en mayúsculas a formato Capitalizado estándar con dos puntos"
+  );
+
+  // -------------------------------------------------------------
+  // Test 8: Exportación a PDF (LSP, DIP, OCP)
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 8: Exportador de Protocolo a PDF ---");
+
+  class MockDocxExporter implements IDocumentExporter {
+    readonly format = "docx";
+    async exportDocument(protocol: Protocol): Promise<ExportFile> {
+      return {
+        blob: new Blob(["mock-docx"], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }),
+        fileName: protocol.safeFileName,
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+    }
+  }
+
+  const mockDocx = new MockDocxExporter();
+  const pdfExporter = new PdfProtocolExporter(mockDocx);
+  assert(pdfExporter.format === "pdf", "PdfProtocolExporter tiene formato 'pdf'");
+
+  let pdfDownloadedFile: ExportFile | null = null;
+  const pdfDownloader: IFileDownloader = {
+    async download(file: ExportFile): Promise<void> {
+      pdfDownloadedFile = file;
+    },
+  };
+
+  const exportPdfUseCase = new ExportProtocolUseCase(pdfExporter, pdfDownloader, logger);
+  await exportPdfUseCase.execute(colabResult);
+
+  assert(pdfDownloadedFile !== null, "El caso de uso de exportación a PDF ejecutó la descarga");
+  assert(
+    (pdfDownloadedFile as ExportFile)?.fileName.endsWith(".pdf"),
+    `El archivo generado termina en .pdf: "${(pdfDownloadedFile as ExportFile)?.fileName}"`
+  );
+  assert(
+    (pdfDownloadedFile as ExportFile)?.mimeType === "application/pdf",
+    "El tipo MIME del archivo exportado es application/pdf"
+  );
+  assert(
+    colabResult.safePdfFileName.endsWith(".pdf"),
+    "La entidad Protocol tiene propiedad safePdfFileName válida"
   );
 
   console.log("\n🎉 TODAS LAS VERIFICACIONES DE ARQUITECTURA Y PRINCIPIOS SOLID PASARON EXITOSAMENTE.");

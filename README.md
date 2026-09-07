@@ -9,7 +9,7 @@ Agnes es una aplicación de escritorio que utiliza inteligencia artificial (Goog
 - 📄 **Generación automática** de protocolos individuales y colaborativos.
 - 🧠 **Impulsado por Google Gemini** (`gemini-2.5-flash` por defecto).
 - 💬 **Vista previa por secciones** del protocolo generado.
-- 📥 **Exportación a Word** (`.docx`) basada en plantillas personalizadas.
+- 📥 **Exportación a Word (`.docx`) y PDF (`.pdf`)** basada en plantillas personalizadas.
 - 🖥️ **App de escritorio multiplataforma** gracias a Electron.
 - 🎓 **Formato exclusivo** para la **Universidad de Cartagena** — estructura y secciones adaptadas a sus estándares académicos.
 

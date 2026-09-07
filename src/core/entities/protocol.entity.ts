@@ -38,4 +38,8 @@ export class Protocol {
     const sanitized = baseName.replace(/[/\\:?"<>|]/g, "-").trim();
     return `${sanitized}.docx`;
   }
+
+  get safePdfFileName(): string {
+    return this.safeFileName.replace(/\.docx$/i, ".pdf");
+  }
 }

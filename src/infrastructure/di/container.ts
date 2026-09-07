@@ -4,6 +4,7 @@ import { EventLoggerService } from "../logging/event-logger.service";
 import { GeminiAIService } from "../ai/gemini-ai.service";
 import { MockAIService } from "../ai/mock-ai.service";
 import { DocxProtocolExporter } from "../export/docx-protocol.exporter";
+import { PdfProtocolExporter } from "../export/pdf-protocol.exporter";
 import { BrowserFileDownloader } from "../download/browser-file.downloader";
 import { ProtocolStrategyRegistry } from "../../core/strategies/protocol-strategy.registry";
 import { IndividualProtocolStrategy } from "../../core/strategies/individual-protocol.strategy";
@@ -20,9 +21,11 @@ export interface AppContainer {
   protocolRegistry: ProtocolStrategyRegistry;
   aiService: IAIService;
   documentExporter: IDocumentExporter;
+  pdfExporter: IDocumentExporter;
   fileDownloader: IFileDownloader;
   generateProtocolUseCase: GenerateProtocolUseCase;
   exportProtocolUseCase: ExportProtocolUseCase;
+  exportPdfUseCase: ExportProtocolUseCase;
 }
 
 export interface ContainerOptions {
@@ -31,6 +34,7 @@ export interface ContainerOptions {
   useMockAI?: boolean;
   customAiService?: IAIService;
   customExporter?: IDocumentExporter;
+  customPdfExporter?: IDocumentExporter;
 }
 
 export function createContainer(options: ContainerOptions = {}): AppContainer {
@@ -57,20 +61,24 @@ export function createContainer(options: ContainerOptions = {}): AppContainer {
 
   // 3. Exporter & Downloader
   const documentExporter = options.customExporter || new DocxProtocolExporter(protocolRegistry);
+  const pdfExporter = options.customPdfExporter || new PdfProtocolExporter(documentExporter);
   const fileDownloader = new BrowserFileDownloader();
 
   // 4. Use Cases
   const generateProtocolUseCase = new GenerateProtocolUseCase(aiService, protocolRegistry, logger);
   const exportProtocolUseCase = new ExportProtocolUseCase(documentExporter, fileDownloader, logger);
+  const exportPdfUseCase = new ExportProtocolUseCase(pdfExporter, fileDownloader, logger);
 
   return {
     logger,
     protocolRegistry,
     aiService,
     documentExporter,
+    pdfExporter,
     fileDownloader,
     generateProtocolUseCase,
     exportProtocolUseCase,
+    exportPdfUseCase,
   };
 }
 

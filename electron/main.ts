@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, shell, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import fs from 'node:fs'
 
 createRequire(import.meta.url)
 
@@ -83,6 +84,91 @@ function createWindow() {
 ipcMain.handle('open-external-url', async (_event, url: string) => {
   if (typeof url === 'string' && (url.startsWith('https:') || url.startsWith('http:'))) {
     await shell.openExternal(url)
+  }
+})
+
+// Canal IPC para renderizado e impresión de protocolo a PDF de alta resolución
+ipcMain.handle('generate-pdf-from-html', async (_event, { html, title }: { html: string; title: string }) => {
+  const workerWin = new BrowserWindow({
+    show: false,
+    width: 850,
+    height: 1100,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+    },
+  })
+
+  const tempHtmlPath = path.join(
+    app.getPath('temp'),
+    `agnes-pdf-${Date.now()}-${Math.random().toString(36).slice(2)}.html`
+  )
+
+  try {
+    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title || 'Protocolo Académico'}</title>
+  <style>
+    @page {
+      size: letter portrait;
+      margin: 0;
+    }
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    }
+    .docx-wrapper {
+      background: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    section.docx {
+      box-shadow: none !important;
+      margin: 0 auto !important;
+      background: #ffffff !important;
+      page-break-after: always !important;
+      break-after: page !important;
+    }
+    section.docx:last-of-type {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+    }
+  </style>
+</head>
+<body>
+  ${html}
+</body>
+</html>`
+
+    await fs.promises.writeFile(tempHtmlPath, fullHtml, 'utf-8')
+    await workerWin.loadFile(tempHtmlPath)
+
+    // Breve espera para que los estilos y fuentes se rendericen
+    await new Promise((resolve) => setTimeout(resolve, 350))
+
+    const pdfBuffer = await workerWin.webContents.printToPDF({
+      pageSize: 'Letter',
+      printBackground: true,
+      preferCSSPageSize: true,
+      margins: { marginType: 'none' },
+    })
+
+    return pdfBuffer
+  } finally {
+    workerWin.close()
+    fs.promises.unlink(tempHtmlPath).catch(() => {})
   }
 })
 

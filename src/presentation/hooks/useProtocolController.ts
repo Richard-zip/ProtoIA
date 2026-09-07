@@ -9,10 +9,11 @@ export function useProtocolController(
   const [materia, setMateria] = useState("");
   const [temasTexto, setTemasTexto] = useState("");
   const [participantes, setParticipantes] = useState([""]);
-  const [tipo, setTipo] = useState("colaborativo");
+  const [tipo, setTipo] = useState("individual");
   const [currentProtocol, setCurrentProtocol] = useState<Protocol | null>(null);
   const [loading, setLoading] = useState(false);
   const [exportingWord, setExportingWord] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -94,6 +95,20 @@ export function useProtocolController(
     }
   };
 
+  const handleExportPdf = async () => {
+    if (!currentProtocol) return;
+
+    setExportingPdf(true);
+    try {
+      await appContainer.exportPdfUseCase.execute(currentProtocol);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorMessage(`Error al descargar PDF: ${msg}`);
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   return {
     materia,
     setMateria,
@@ -112,9 +127,11 @@ export function useProtocolController(
     currentProtocol,
     loading,
     exportingWord,
+    exportingPdf,
     logs,
     errorMessage,
     handleGenerate,
     handleExportWord,
+    handleExportPdf,
   };
 }

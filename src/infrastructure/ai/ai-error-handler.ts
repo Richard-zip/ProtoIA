@@ -28,31 +28,33 @@ export function parseGeminiError(error: unknown): FormattedAiError {
       isNetworkError: false,
       userTitle: "Servidores de Google en alta demanda temporal",
       userMessage:
-        "Los servidores de Google Gemini están experimentando un alto volumen de solicitudes a nivel global en este momento. Este evento es completamente externo a la aplicación Agnes.",
+        "Los servidores de Google Gemini están experimentando un alto volumen de solicitudes a nivel global en este momento. Por favor, inténtalo más tarde. Recuerda que Agnes AI puede cometer errores, por lo que es importante que revises la información generada.",
       userRecommendation:
-        "Los picos de demanda en Google suelen durar pocos segundos. Por favor, espera unos instantes y vuelve a intentar.",
+        "Por favor, inténtalo más tarde o espera unos instantes. Ten en cuenta que Agnes AI puede cometer errores y es importante que revises el protocolo.",
       rawError: raw,
     };
   }
 
-  // 2. Límite de cuota excedido (429 / RESOURCE_EXHAUSTED / Quota exceeded)
+  // 2. Límite de cuota excedido (429 / RESOURCE_EXHAUSTED / Quota exceeded / agotaron)
   if (
     raw.includes("429") ||
     /RESOURCE_EXHAUSTED/i.test(raw) ||
     /quota/i.test(raw) ||
     /rate limit/i.test(raw) ||
-    /Resource has been exhausted/i.test(raw)
+    /Resource has been exhausted/i.test(raw) ||
+    /exhausted/i.test(raw) ||
+    /agotaron/i.test(raw)
   ) {
     return {
       isHighDemand: false,
       isQuotaExceeded: true,
       isAuthError: false,
       isNetworkError: false,
-      userTitle: "Límite de solicitudes de IA alcanzado",
+      userTitle: "Intentos agotados temporalmente",
       userMessage:
-        "Se ha alcanzado temporalmente la cuota máxima de peticiones permitidas por la API de Google Gemini.",
+        "Se han agotado temporalmente los intentos permitidos por Google Gemini. Por favor, inténtalo más tarde. Recuerda que Agnes AI puede cometer errores y es importante que revises el protocolo generado.",
       userRecommendation:
-        "Espera aproximadamente 1 minuto antes de solicitar una nueva generación para que la cuota se restablezca.",
+        "Por favor, inténtalo más tarde. Ten presente que Agnes AI puede cometer errores, por lo que es importante revisar el contenido.",
       rawError: raw,
     };
   }

@@ -12,10 +12,12 @@ interface ProtocolPreviewProps {
   protocol: Protocol | null;
   loading: boolean;
   exportingWord?: boolean;
+  exportingPdf?: boolean;
   errorMessage: string | null;
   documentExporter?: IDocumentExporter;
   onRetry?: () => void;
   onExportWord?: () => void;
+  onExportPdf?: () => void;
   onRequestConfig?: () => void;
   children?: React.ReactNode;
 }
@@ -28,10 +30,12 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
   protocol,
   loading,
   exportingWord = false,
+  exportingPdf = false,
   errorMessage,
   documentExporter,
   onRetry,
   onExportWord,
+  onExportPdf,
   onRequestConfig,
   children,
 }) => {
@@ -55,7 +59,7 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
               type="button"
               className="download-word-btn"
               onClick={onExportWord}
-              disabled={exportingWord}
+              disabled={exportingWord || exportingPdf}
               title="Descargar documento Word (.docx)"
             >
               {exportingWord ? (
@@ -79,18 +83,56 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
               )}
             </button>
           )}
+
+          {protocol && protocol.sections.length > 0 && !loading && onExportPdf && (
+            <button
+              type="button"
+              className="download-pdf-btn"
+              onClick={onExportPdf}
+              disabled={exportingWord || exportingPdf}
+              title="Descargar documento PDF (.pdf)"
+            >
+              {exportingPdf ? (
+                <>
+                  <svg className="spinner-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" />
+                  </svg>
+                  <span>Exportando PDF...</span>
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <path d="M10 12h4" />
+                    <path d="M12 18v-6" />
+                    <path d="m9 15 3 3 3-3" />
+                  </svg>
+                  <span>Descargar PDF (.pdf)</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       {errorMessage && (() => {
+        const isQuotaExceeded =
+          errorMessage.toLowerCase().includes("agotaron temporalmente") ||
+          errorMessage.toLowerCase().includes("cuota") ||
+          errorMessage.toLowerCase().includes("límite de solicitudes") ||
+          errorMessage.toLowerCase().includes("429");
+
         const isHighDemand =
-          errorMessage.toLowerCase().includes("alta demanda") ||
-          errorMessage.toLowerCase().includes("servidores de google") ||
-          errorMessage.includes("503");
+          !isQuotaExceeded &&
+          (errorMessage.toLowerCase().includes("alta demanda") ||
+            errorMessage.toLowerCase().includes("servidores de google") ||
+            errorMessage.includes("503"));
 
         return (
-          <div className={`error-banner ${isHighDemand ? "high-demand" : "standard"}`} role="alert">
-            {isHighDemand ? (
+          <div className={`error-banner ${isHighDemand || isQuotaExceeded ? "high-demand" : "standard"}`} role="alert">
+            {isHighDemand || isQuotaExceeded ? (
               <svg className="error-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
                 <line x1="12" y1="11" x2="12" y2="13" />
@@ -106,11 +148,30 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
 
             <div className="error-banner-content">
               <div className="error-banner-title">
-                <span>{isHighDemand ? "Servidores de Google en alta demanda" : "Aviso de generación"}</span>
-                {isHighDemand && <span className="error-banner-badge">Servicio Externo</span>}
+                <span>
+                  {isQuotaExceeded
+                    ? "Intentos agotados temporalmente"
+                    : isHighDemand
+                    ? "Servidores de Google en alta demanda"
+                    : "Aviso de generación"}
+                </span>
+                {(isHighDemand || isQuotaExceeded) && (
+                  <span className="error-banner-badge">
+                    {isQuotaExceeded ? "Límite Temporal" : "Servicio Externo"}
+                  </span>
+                )}
               </div>
 
               <p className="error-banner-message">{errorMessage}</p>
+
+              <div className="error-banner-disclaimer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <span><strong>Aviso:</strong> Agnes AI puede cometer errores. Es importante que revises y verifiques la información generada.</span>
+              </div>
 
               {onRequestConfig && errorMessage.toLowerCase().includes("api key") ? (
                 <div className="error-banner-action">
@@ -240,6 +301,17 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
           <p className="state-desc">
             Completa la materia y los temas en el panel izquierdo y haz clic en <strong>Generar protocolo</strong> para ver aquí el documento institucional redactado.
           </p>
+        </div>
+      )}
+
+      {protocol && protocol.sections.length > 0 && !loading && (
+        <div className="preview-footer-disclaimer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>Agnes AI puede cometer errores. Es importante que revises y verifiques la información antes de su entrega.</span>
         </div>
       )}
 

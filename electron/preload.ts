@@ -25,4 +25,6 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
 contextBridge.exposeInMainWorld('electronAPI', {
   openExternal: (url: string) => ipcRenderer.invoke('open-external-url', url),
+  generatePdf: (params: { html: string; title: string }) =>
+    ipcRenderer.invoke('generate-pdf-from-html', params),
 })

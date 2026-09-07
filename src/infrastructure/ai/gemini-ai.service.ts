@@ -46,6 +46,6 @@ export class GeminiAIService implements IAIService {
       }
     }
 
-    throw new Error("No fue posible obtener respuesta del modelo tras reintentar.");
+    throw new Error("Se han agotado temporalmente los intentos de generación. Por favor, inténtalo más tarde. Recuerda que Agnes AI puede cometer errores y es importante que revises el contenido generado.");
   }
 }

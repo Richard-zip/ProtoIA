@@ -207,6 +207,10 @@ export const ProtocolForm: React.FC<ProtocolFormProps> = ({
           )}
         </button>
       </div>
+
+      <p className="form-disclaimer-note">
+        Agnes AI puede cometer errores. Es importante que revises la información generada.
+      </p>
     </section>
   );
 };

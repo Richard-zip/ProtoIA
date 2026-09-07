@@ -28,9 +28,11 @@ export const ProtocolApp: React.FC<ProtocolAppProps> = ({ appContainer, onReques
     currentProtocol,
     loading,
     exportingWord,
+    exportingPdf,
     errorMessage,
     handleGenerate,
     handleExportWord,
+    handleExportPdf,
   } = useProtocolController(appContainer, onRequestConfig);
 
   const activeContainer = appContainer || defaultContainer;
@@ -62,10 +64,12 @@ export const ProtocolApp: React.FC<ProtocolAppProps> = ({ appContainer, onReques
         protocol={currentProtocol}
         loading={loading}
         exportingWord={exportingWord}
+        exportingPdf={exportingPdf}
         errorMessage={errorMessage}
         documentExporter={activeContainer.documentExporter}
         onRetry={handleGenerate}
         onExportWord={handleExportWord}
+        onExportPdf={handleExportPdf}
         onRequestConfig={onRequestConfig}
       />
     </div>
