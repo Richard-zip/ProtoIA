@@ -13,6 +13,7 @@ async function main() {
         outDir,
         emptyOutDir: true,
         rollupOptions: {
+          external: [/^node:/, "fs", "path", "child_process"],
           output: { entryFileNames: "verify.js" },
         },
       },

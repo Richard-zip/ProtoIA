@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TARGET="$(find "$HERE/installed" -path "*/program/soffice" -type f | head -n 1)"
+if [ -z "$TARGET" ]; then
+  echo "Error: No se encontró el ejecutable soffice en $HERE/installed" >&2
+  exit 1
+fi
+chmod +x "$TARGET" 2>/dev/null || true
+exec "$TARGET" "$@"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   AISettings,
-  AVAILABLE_MODELS,
+  DEFAULT_FREE_MODEL,
   testGeminiConnection,
 } from "../../infrastructure/config/ai-settings.service";
 import { openExternalLink } from "../utils/open-external";
@@ -22,15 +22,6 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
   isInitialSetup = false,
 }) => {
   const [apiKey, setApiKey] = useState(currentSettings.apiKey);
-  const [selectedModel, setSelectedModel] = useState(currentSettings.model || "gemini-2.5-flash");
-  const [isCustomModel, setIsCustomModel] = useState(
-    !AVAILABLE_MODELS.some((m) => m.id === (currentSettings.model || "gemini-2.5-flash"))
-  );
-  const [customModelInput, setCustomModelInput] = useState(
-    !AVAILABLE_MODELS.some((m) => m.id === (currentSettings.model || "gemini-2.5-flash"))
-      ? currentSettings.model
-      : ""
-  );
   const [showApiKey, setShowApiKey] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -40,17 +31,6 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setApiKey(currentSettings.apiKey);
-      const isKnown = AVAILABLE_MODELS.some((m) => m.id === currentSettings.model);
-      if (isKnown) {
-        setSelectedModel(currentSettings.model);
-        setIsCustomModel(false);
-      } else if (currentSettings.model) {
-        setIsCustomModel(true);
-        setCustomModelInput(currentSettings.model);
-      } else {
-        setSelectedModel("gemini-2.5-flash");
-        setIsCustomModel(false);
-      }
       setTestResult(null);
       setValidationError(null);
     }
@@ -58,23 +38,17 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const effectiveModel = isCustomModel ? customModelInput.trim() : selectedModel;
-
   const handleTest = async () => {
     setValidationError(null);
     if (!apiKey.trim()) {
       setValidationError("Ingresa una API Key para poder realizar la prueba de conexión.");
       return;
     }
-    if (isCustomModel && !customModelInput.trim()) {
-      setValidationError("Escribe el nombre del modelo personalizado que deseas probar.");
-      return;
-    }
 
     setIsTesting(true);
     setTestResult(null);
     try {
-      const result = await testGeminiConnection(apiKey, effectiveModel);
+      const result = await testGeminiConnection(apiKey, DEFAULT_FREE_MODEL);
       setTestResult(result);
     } catch (err) {
       setTestResult({
@@ -96,15 +70,9 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
       return;
     }
 
-    const cleanModel = isCustomModel ? customModelInput.trim() : selectedModel;
-    if (!cleanModel) {
-      setValidationError("Debes seleccionar o ingresar un modelo válido.");
-      return;
-    }
-
     onSave({
       apiKey: cleanKey,
-      model: cleanModel,
+      model: DEFAULT_FREE_MODEL,
     });
   };
 
@@ -130,10 +98,10 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
           </div>
           <div className="modal-header-text">
             <h2 id="modal-settings-title" className="modal-title">
-              {isInitialSetup ? "Bienvenido a Agnes — Configuración Inicial" : "Configuración del Motor de IA"}
+              {isInitialSetup ? "Bienvenido a Agnes — Configuración de API" : "Configuración de API de Google Gemini"}
             </h2>
             <p className="modal-subtitle">
-              Ingresa tu API Key de Google Gemini y el modelo deseado para habilitar la generación académica.
+              Configura tu API Key gratuita de Google AI Studio para habilitar la generación académica de protocolos.
             </p>
           </div>
           {!isInitialSetup && (
@@ -166,7 +134,7 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
               <div className="notice-content">
                 <strong>Configura tu clave de acceso</strong>
                 <p>
-                  Para que cada usuario trabaje de forma autónoma y sin límites compartidos, Agnes requiere tu propia clave de Google Gemini. Tu clave se conserva cifrada y almacenada localmente en tu equipo.
+                  Para que cada usuario trabaje de forma autónoma y sin límites compartidos, Agnes requiere tu propia clave de Google Gemini (capa gratuita de Google AI Studio). Tu clave se conserva cifrada y almacenada localmente en tu equipo.
                 </p>
               </div>
             </div>
@@ -247,64 +215,30 @@ export const AISettingsModal: React.FC<AISettingsModalProps> = ({
             </p>
           </div>
 
-          {/* Campo Modelo de Gemini */}
+          {/* Motor Gratuito por Defecto */}
           <div className="field">
             <div className="field-header">
-              <label className="field-label">Modelo de Inteligencia Artificial</label>
-              <span className="field-badge">Selección de Motor</span>
+              <label className="field-label">Motor de Inteligencia Artificial</label>
+              <span className="field-badge">Por Defecto</span>
             </div>
 
-            <div className="model-selector-grid">
-              {AVAILABLE_MODELS.map((modelOpt) => {
-                const isSelected = !isCustomModel && selectedModel === modelOpt.id;
-                return (
-                  <button
-                    key={modelOpt.id}
-                    type="button"
-                    className={`model-option-card ${isSelected ? "selected" : ""}`}
-                    onClick={() => {
-                      setIsCustomModel(false);
-                      setSelectedModel(modelOpt.id);
-                    }}
-                  >
-                    <div className="model-option-top">
-                      <span className="model-option-name">{modelOpt.name}</span>
-                      {modelOpt.badge && (
-                        <span className={`model-option-badge ${modelOpt.badge === "Recomendado" ? "recommended" : "advanced"}`}>
-                          {modelOpt.badge}
-                        </span>
-                      )}
-                    </div>
-                    <p className="model-option-desc">{modelOpt.description}</p>
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                className={`model-option-card custom ${isCustomModel ? "selected" : ""}`}
-                onClick={() => setIsCustomModel(true)}
-              >
-                <div className="model-option-top">
-                  <span className="model-option-name">Personalizado</span>
-                  <span className="model-option-badge">Manual</span>
+            <div className="default-free-model-card">
+              <div className="free-model-header">
+                <div className="free-model-info">
+                  <span className="free-model-badge">API Gratuita</span>
+                  <strong className="free-model-title">Gemini 2.5 Flash</strong>
                 </div>
-                <p className="model-option-desc">Ingresa cualquier otro identificador de modelo disponible en Gemini.</p>
-              </button>
-            </div>
-
-            {isCustomModel && (
-              <div className="custom-model-input-wrap">
-                <input
-                  type="text"
-                  className="field-input"
-                  placeholder="Ej: gemini-2.0-flash-exp, gemini-1.5-flash-8b..."
-                  value={customModelInput}
-                  onChange={(e) => setCustomModelInput(e.target.value)}
-                  autoComplete="off"
-                />
+                <span className="free-tier-indicator">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Sin costo en Google AI Studio
+                </span>
               </div>
-            )}
+              <p className="free-model-description">
+                Agnes utiliza de forma exclusiva y predeterminada la API gratuita oficial de Google Gemini (modelo 2.5 Flash). Ofrece máxima velocidad y razonamiento óptimo para la síntesis académica sin requerir modelos de pago ni suscripciones.
+              </p>
+            </div>
           </div>
 
           {/* Resultado de prueba o errores */}

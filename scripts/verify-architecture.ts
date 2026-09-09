@@ -3,6 +3,8 @@ import { IndividualProtocolStrategy } from "../src/core/strategies/individual-pr
 import { CollaborativeProtocolStrategy } from "../src/core/strategies/collaborative-protocol.strategy.ts";
 import { BaseProtocolStrategy } from "../src/core/strategies/base-protocol.strategy.ts";
 import { ProtocolStrategyInput, TemplateTarget } from "../src/core/interfaces/protocol-strategy.interface.ts";
+import { INDIVIDUAL_PROMPT } from "../src/core/prompts/individual.prompt.ts";
+import { COLLABORATIVE_PROMPT } from "../src/core/prompts/collaborative.prompt.ts";
 import { MockAIService } from "../src/infrastructure/ai/mock-ai.service.ts";
 import { EventLoggerService } from "../src/infrastructure/logging/event-logger.service.ts";
 import { GenerateProtocolUseCase } from "../src/application/use-cases/generate-protocol.use-case.ts";
@@ -18,6 +20,13 @@ import {
   splitLabelOrListMarker,
   stripTags,
 } from "../src/infrastructure/export/helpers/docx-xml.helper.ts";
+import {
+  AISettingsService,
+  DEFAULT_FREE_MODEL,
+  AVAILABLE_MODELS,
+} from "../src/infrastructure/config/ai-settings.service.ts";
+import fs from "node:fs";
+import path from "node:path";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -465,7 +474,139 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
     "La entidad Protocol tiene propiedad safePdfFileName válida"
   );
 
+  // -------------------------------------------------------------
+  // Test 9: Regla 5 para ignorar números, símbolos y emojis en temas
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 9: Regla 5 de la IA para Ignorar Números, Símbolos y Emojis en Temas ---");
+
+  assert(
+    INDIVIDUAL_PROMPT.includes("5. IGNORAR NÚMEROS, SÍMBOLOS Y EMOJIS EN LOS TEMAS:"),
+    "El prompt individual incluye explícitamente la Regla 5 para instruir a la IA a descartar números, símbolos y emojis"
+  );
+  assert(
+    COLLABORATIVE_PROMPT.includes("5. IGNORAR NÚMEROS, SÍMBOLOS Y EMOJIS EN LOS TEMAS:"),
+    "El prompt colaborativo incluye explícitamente la Regla 5 para instruir a la IA a descartar números, símbolos y emojis"
+  );
+  assert(
+    INDIVIDUAL_PROMPT.includes("1) Tema") && INDIVIDUAL_PROMPT.includes("#Tema") && INDIVIDUAL_PROMPT.includes("Tema ✅"),
+    "La Regla 5 del prompt individual cubre los ejemplos especificados por el usuario ('1) Tema', '#Tema', 'Tema ✅')"
+  );
+  assert(
+    COLLABORATIVE_PROMPT.includes("1) Tema") && COLLABORATIVE_PROMPT.includes("#Tema") && COLLABORATIVE_PROMPT.includes("Tema ✅"),
+    "La Regla 5 del prompt colaborativo cubre los ejemplos especificados por el usuario ('1) Tema', '#Tema', 'Tema ✅')"
+  );
+
+  const dirtyTopicsInput = {
+    materia: "Seguridad Informática",
+    temas: [
+      "1) Fases de un pentesting",
+      "# OWASP TOP TEN",
+      "Ataques de red ✅",
+      "🚀 Pruebas de caja blanca",
+    ],
+    participantes: ["Richard Assis"],
+    tipo: "individual",
+  };
+
+  const dirtyPromptIndiv = individualStrategy.buildPrompt(dirtyTopicsInput);
+  assert(
+    dirtyPromptIndiv.includes("fases de un pentesting"),
+    "buildPrompt adapta el primer tema con numeración de forma limpia en el texto"
+  );
+
+  const extractedIndiv = individualStrategy.extractSections("PROTOCOLO INDIVIDUAL", dirtyTopicsInput);
+  assert(
+    !extractedIndiv.descripcion.includes("1)") && !extractedIndiv.descripcion.includes("✅"),
+    "La estrategia extrae descripciones sin numeración 1) ni emojis ✅"
+  );
+  assert(
+    !extractedIndiv.temas.includes("1)") && !extractedIndiv.temas.includes("✅"),
+    "La lista de temas fallback se limpia de numeración 1) y emojis ✅"
+  );
+
+  // -------------------------------------------------------------
+  // Test 10: Restricción exclusiva al modelo gratuito por defecto (Gemini 2.5 Flash)
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 10: Modelo Exclusivo de API Gratuita por Defecto ---");
+  assert(
+    DEFAULT_FREE_MODEL === "gemini-2.5-flash",
+    "El modelo gratuito por defecto es gemini-2.5-flash"
+  );
+  assert(
+    AVAILABLE_MODELS.length === 1 && AVAILABLE_MODELS[0].id === "gemini-2.5-flash",
+    "AVAILABLE_MODELS contiene exclusivamente el modelo gratuito por defecto"
+  );
+  assert(
+    AVAILABLE_MODELS[0].badge === "API Gratuita",
+    "El modelo gratuito está identificado con la insignia 'API Gratuita'"
+  );
+
+  const currentSettings = AISettingsService.getSettings();
+  assert(
+    currentSettings.model === "gemini-2.5-flash",
+    "AISettingsService.getSettings() retorna de manera fija el modelo gratuito gemini-2.5-flash"
+  );
+
+  AISettingsService.saveSettings({ apiKey: "test-key", model: "otro-modelo-pago" });
+  const savedSettings = AISettingsService.getSettings();
+  assert(
+    savedSettings.model === "gemini-2.5-flash",
+    "AISettingsService fuerza el almacenamiento exclusivo del modelo gratuito por defecto"
+  );
+
+  // -------------------------------------------------------------
+  // Test 11: Motor nativo LibreOffice para exportación idéntica a Word
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 11: Motor Nativo LibreOffice Embebido para PDF ---");
+  const binDir = path.resolve("bin", "libreoffice");
+  assert(fs.existsSync(binDir), "El directorio 'bin/libreoffice' existe dentro del proyecto");
+
+  const sofficeWrapper = path.join(binDir, "soffice");
+  assert(fs.existsSync(sofficeWrapper), "El ejecutable wrapper 'bin/libreoffice/soffice' existe");
+  const stats = fs.statSync(sofficeWrapper);
+  assert((stats.mode & 0o111) !== 0, "El ejecutable wrapper tiene permisos de ejecución (chmod +x)");
+
+  const packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
+  assert(
+    packageJson.build?.extraResources?.some((r: { from?: string }) => r.from === "bin/libreoffice"),
+    "package.json empaqueta 'bin/libreoffice' en extraResources de electron-builder"
+  );
+
+  console.log("\n--- TEST 12: Visualización de Páginas Reales con LibreOffice (Opción 1) ---");
+  const mainTs = fs.readFileSync("electron/main.ts", "utf-8");
+  assert(
+    mainTs.includes("render-protocol-pages"),
+    "electron/main.ts implementa el canal IPC 'render-protocol-pages'"
+  );
+  assert(
+    mainTs.includes("runLibreOfficeConversion"),
+    "electron/main.ts invoca runLibreOfficeConversion para la vista previa"
+  );
+
+  const preloadTs = fs.readFileSync("electron/preload.ts", "utf-8");
+  assert(
+    preloadTs.includes("renderProtocolPages"),
+    "electron/preload.ts expone 'renderProtocolPages' a través del puente de contexto seguro"
+  );
+
+  const viteEnvTs = fs.readFileSync("src/vite-env.d.ts", "utf-8");
+  assert(
+    viteEnvTs.includes("renderProtocolPages"),
+    "src/vite-env.d.ts define el tipado estricto para 'renderProtocolPages'"
+  );
+
+  const docxPreviewTs = fs.readFileSync("src/presentation/components/DocxPreview.tsx", "utf-8");
+  assert(
+    docxPreviewTs.includes("renderWithLibreOffice"),
+    "DocxPreview.tsx implementa renderWithLibreOffice como motor de páginas reales"
+  );
+  assert(
+    docxPreviewTs.includes("protocol-paper-sheet"),
+    "DocxPreview.tsx renderiza hojas de papel físicas con numeración oficial"
+  );
+
   console.log("\n🎉 TODAS LAS VERIFICACIONES DE ARQUITECTURA Y PRINCIPIOS SOLID PASARON EXITOSAMENTE.");
+
 }
 
 runVerification().catch((err) => {

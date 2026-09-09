@@ -7,6 +7,7 @@ REGLAS ESTRICTAS DE CAPITALIZACIÓN Y REDACCIÓN:
 2. NUNCA escribas temas, palabras, títulos, conceptos ni párrafos enteros en MAYÚSCULAS SOSTENIDAS (bloque de mayúsculas), aunque los temas hayan sido ingresados en mayúsculas por el usuario.
 3. Al mencionar los temas dentro de cualquier párrafo u oración, adáptalos gramaticalmente en minúsculas fluidas (ejemplo: "fases de un pentesting, pruebas de caja blanca y caja negra..."), usando mayúsculas únicamente al inicio de oración o para siglas técnicas reconocidas (ejemplos: OWASP, SQL, API, TCP/IP, SOLID).
 4. No coloques puntos innecesarios dentro de listas de temas ni dobles puntos (..) al final de oraciones.
+5. IGNORAR NÚMEROS, SÍMBOLOS Y EMOJIS EN LOS TEMAS: Si el usuario ingresa temas con números, listas o viñetas (ejemplos: "1) Tema", "1. Tema", "2 - Tema"), símbolos o prefijos (ejemplos: "#Tema", "*Tema*", "@Tema") o emojis/iconos (ejemplos: "Tema ✅", "🚀 Tema", "Tema 📌"), debes ignorar y descartar por completo todos esos números, caracteres y emojis. Interpreta y redacta el tema exclusivamente con su contenido conceptual limpio y relevante (ejemplo: "Tema" o "fases de un pentesting"), sin incluir jamás numerales, viñetas, caracteres especiales ni emojis en ninguna sección, título, mención, palabra clave u objetivo del protocolo.
 
 PROTOCOLO INDIVIDUAL - [NOMBRE DE LA MATERIA]
 

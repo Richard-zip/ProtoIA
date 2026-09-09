@@ -584,6 +584,121 @@
   gap: 12px;
 }
 
+/* Toolbar superior de controles de la vista previa */
+.docx-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  backdrop-filter: blur(8px);
+}
+
+.docx-preview-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lo-engine-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.docx-preview-badge-status {
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.docx-preview-badge-status svg {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+
+.docx-preview-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(30, 41, 59, 0.7);
+  padding: 3px 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.docx-zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.docx-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.docx-zoom-level {
+  padding: 0 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 42px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.docx-zoom-level:hover {
+  color: #38bdf8;
+}
+
+.docx-zoom-fit-btn {
+  padding: 2px 8px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  margin-left: 2px;
+}
+
+.docx-zoom-fit-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  color: #7dd3fc;
+}
+
 .docx-preview-loading {
   display: flex;
   align-items: center;
@@ -631,7 +746,66 @@
   pointer-events: none;
 }
 
+/* Protocol Pages Flow - Option 1 LibreOffice Real Pages */
+.protocol-pages-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  width: 100%;
+}
+
+.protocol-paper-sheet {
+  position: relative;
+  width: calc(816px * var(--sheet-zoom, 1));
+  max-width: 100%;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55), 0 3px 10px rgba(0, 0, 0, 0.3);
+  overflow: visible;
+  transition: width 0.15s ease;
+}
+
+.protocol-paper-sheet-badge {
+  position: absolute;
+  top: -14px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #090e17;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 3px 12px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.protocol-sheet-page-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+}
+
+.protocol-sheet-doc-type {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.protocol-sheet-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  user-select: text;
+  background: #ffffff;
+}
+
 /* Overriding docx-preview internal wrapper */
+
 .docx-preview-viewport .docx-wrapper {
   background: transparent !important;
   padding: 0 !important;
@@ -640,6 +814,7 @@
   align-items: center !important;
   gap: 32px !important;
   width: 100% !important;
+  zoom: var(--docx-zoom, 1);
 }
 
 .docx-preview-viewport .docx-wrapper > section.docx {
@@ -650,18 +825,120 @@
   margin-bottom: 0 !important;
   box-sizing: border-box !important;
   max-width: 100% !important;
+  position: relative !important;
 }
 
+/* 1. Header: Ventana de recorte para el membrete superior institucional.
+   Impide que la imagen de 871pt desborde y su barra inferior choque con la tabla y el texto. */
+.docx-preview-viewport header {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 120pt !important;
+  max-height: 120pt !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.docx-preview-viewport header p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.docx-preview-viewport header svg {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 680.25pt !important;
+  height: 871.75pt !important;
+  margin-left: -149.55pt !important;
+  margin-top: -44.40pt !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* 2. Contenedor principal de contenidos (tabla y notas) */
+.docx-preview-viewport article {
+  position: relative !important;
+  z-index: 1 !important;
+  margin-top: 22pt !important;
+  padding: 0 !important;
+}
+
+/* 3. Tipografía de alta fidelidad, suavizado y nitidez */
+.docx-preview-viewport .docx,
 .docx-preview-viewport .docx p,
 .docx-preview-viewport .docx span,
 .docx-preview-viewport .docx td,
 .docx-preview-viewport .docx th,
 .docx-preview-viewport .docx li {
+  font-family: "Calibri", "Carlito", "Segoe UI", Arial, "Helvetica Neue", Helvetica, sans-serif !important;
   color: #0f172a;
+  -webkit-font-smoothing: antialiased !important;
+  text-rendering: optimizeLegibility !important;
 }
 
+/* 4. Tabla institucional con formato profesional idéntico a Word */
 .docx-preview-viewport .docx table {
-  border-collapse: collapse;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+  margin-bottom: 16pt !important;
+}
+
+.docx-preview-viewport .docx table td,
+.docx-preview-viewport .docx table th {
+  border: 1px solid #0f172a !important;
+  padding: 7pt 9pt !important;
+  vertical-align: top !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.docx-preview-viewport .docx table tr:first-child td {
+  background: #f8fafc !important;
+  padding: 9pt 12pt !important;
+  text-align: center !important;
+}
+
+.docx-preview-viewport .docx table tr:first-child td span {
+  font-size: 13pt !important;
+  font-weight: 700 !important;
+  color: #1e3a8a !important;
+}
+
+.docx-preview-viewport .docx table p {
+  line-height: 1.5 !important;
+}
+
+/* 5. Párrafos fuera de la tabla (Nota sobre entrega PDF institucional) */
+.docx-preview-viewport article > p {
+  margin-top: 14pt !important;
+  margin-bottom: 6pt !important;
+}
+
+/* 6. Pie de página institucional */
+.docx-preview-viewport footer {
+  position: relative !important;
+  z-index: 1 !important;
+  margin-top: 20pt !important;
+  min-height: 40pt !important;
+}
+
+.docx-preview-viewport footer svg {
+  max-width: 100% !important;
+}
+
+/* 7. Optimización de contraste y nitidez gráfica */
+.docx-preview-viewport img,
+.docx-preview-viewport image,
+.docx-preview-viewport svg {
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: high-quality !important;
 }
 
 /* Academic Document Paper Sheet */
@@ -1386,6 +1663,69 @@
   color: #94a3b8;
   margin: 4px 0 0;
   line-height: 1.35;
+}
+
+.default-free-model-card {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.free-model-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.free-model-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.free-model-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.free-model-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.free-tier-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 3px 9px;
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.free-model-description {
+  font-size: 0.77rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
 }
 
 .model-selector-grid {

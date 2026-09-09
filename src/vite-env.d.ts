@@ -9,5 +9,15 @@ interface Window {
   };
   electronAPI?: {
     openExternal: (url: string) => Promise<void>;
+    generatePdf?: (params: { html: string; title: string }) => Promise<unknown>;
+    convertDocxToPdf?: (params: { docxBase64: string; title: string }) => Promise<unknown>;
+    renderProtocolPages?: (params: { docxBase64: string }) => Promise<{
+      success: boolean;
+      error?: string;
+      pdfBase64?: string;
+      pageImages?: string[];
+      totalPages?: number;
+    }>;
   };
 }
+

@@ -27,3 +27,6 @@ dist-ssr
 .env
 
 release/
+
+# LibreOffice portable binaries (generados por pnpm run setup:libreoffice)
+bin/libreoffice/installed/

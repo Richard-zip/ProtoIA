@@ -91,7 +91,7 @@ export default function App() {
             type="button"
             className={`topbar-chip topbar-config-btn ${hasApiKey ? "status-active" : "status-warning"}`}
             onClick={() => setIsConfigOpen(true)}
-            title="Haz clic para configurar o cambiar tu API Key de Gemini y modelo de IA"
+            title="Haz clic para consultar o configurar tu API Key gratuita de Gemini"
           >
             {hasApiKey ? (
               <>
@@ -99,8 +99,8 @@ export default function App() {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                 </svg>
-                <span className="topbar-model-name">{aiSettings.model}</span>
-                <span className="topbar-config-tag">Cambiar</span>
+                <span className="topbar-model-name">Gemini 2.5 Flash (Gratis)</span>
+                <span className="topbar-config-tag">API Key</span>
               </>
             ) : (
               <>

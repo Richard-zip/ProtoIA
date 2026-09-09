@@ -29,7 +29,8 @@ export abstract class BaseProtocolStrategy implements IProtocolStrategy {
     if (!raw) return "";
     let text = raw
       .trim()
-      .replace(/^[•*-]\s*/, "")
+      .replace(/^(?:\d+[.)]|\d+\s*-\s*|[#*•@\-\s]+)/u, "")
+      .replace(/[\s✅🚀📌✔-]+$/u, "")
       .replace(/[.,;:\s]+$/, "")
       .trim();
     if (!text) return "";
