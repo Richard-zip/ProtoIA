@@ -40,6 +40,17 @@
   "build": {
     "appId": "com.agnes.protoia",
     "productName": "Agnes",
+    "compression": "maximum",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Education"
+    },
     "extraResources": [
       {
         "from": "bin/libreoffice",
