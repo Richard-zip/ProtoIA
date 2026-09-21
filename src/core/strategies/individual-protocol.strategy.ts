@@ -154,7 +154,7 @@ export class IndividualProtocolStrategy extends BaseProtocolStrategy {
         sections.conclusiones ||
         `Se concluyó que ${firstTema} requiere un análisis integral y una aplicación práctica sostenida.`,
       recomendaciones: this.formatRecommendations(rawRecomendaciones),
-      bibliografia: sections.bibliografia || "Bibliografía por completar.",
+      bibliografia: this.formatBibliography(sections.bibliografia),
       temas: fallbackTemas || "Temas por definir",
     };
 

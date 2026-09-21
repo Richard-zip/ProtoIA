@@ -876,7 +876,7 @@
 .docx-preview-viewport .docx td,
 .docx-preview-viewport .docx th,
 .docx-preview-viewport .docx li {
-  font-family: "Calibri", "Carlito", "Segoe UI", Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+  font-family: "Times New Roman", Times, "Liberation Serif", serif !important;
   color: #0f172a;
   -webkit-font-smoothing: antialiased !important;
   text-rendering: optimizeLegibility !important;
@@ -953,6 +953,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  font-family: "Times New Roman", Times, "Liberation Serif", serif;
 }
 
 .document-institutional-header {

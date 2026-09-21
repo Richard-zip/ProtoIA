@@ -322,6 +322,74 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
     "Las discusiones y recomendaciones se extraen del markdown de Gemini"
   );
 
+  // 6.9: Viñetas de puntos (•) en protocolo colaborativo (resumen, encuentros y desencuentros) sin asteriscos
+  assert(
+    colabResult.extractedFields.resumen.includes("• Microservicios vs Monolitos:") &&
+    colabResult.extractedFields.resumen.includes("• Inversión de Dependencias:") &&
+    !colabResult.extractedFields.resumen.includes("*"),
+    "El resumen de discusiones grupales presenta cada punto precedido por una viñeta de punto (•) y sin asteriscos"
+  );
+  assert(
+    colabResult.extractedFields.encuentros.includes("• Todos concordamos en que") &&
+    colabResult.extractedFields.encuentros.includes("• Hubo acuerdo unánime en que") &&
+    !colabResult.extractedFields.encuentros.includes("*"),
+    "Los encuentros conceptuales presentan cada punto precedido por una viñeta de punto (•) y sin asteriscos"
+  );
+  assert(
+    colabResult.extractedFields.desacuerdos.includes("• Selección de persistencia relacional vs NoSQL:") &&
+    colabResult.extractedFields.desacuerdos.includes("• Uso de ORM vs Queries nativos:") &&
+    !colabResult.extractedFields.desacuerdos.includes("*"),
+    "Los desencuentros conceptuales presentan cada punto precedido por una viñeta de punto (•) y sin asteriscos"
+  );
+
+  // 6.10: La bibliografía no tiene enumeraciones ni viñetas
+  assert(
+    !colabResult.extractedFields.bibliografia.includes("1.") &&
+    !colabResult.extractedFields.bibliografia.includes("2.") &&
+    !/^\s*(?:\d+[.)]|[-*•])\s+/m.test(colabResult.extractedFields.bibliografia),
+    "La bibliografía en protocolo colaborativo no contiene numeración ni viñetas"
+  );
+  assert(
+    !individualResult.extractedFields.bibliografia.includes("1.") &&
+    !individualResult.extractedFields.bibliografia.includes("2.") &&
+    !/^\s*(?:\d+[.)]|[-*•])\s+/m.test(individualResult.extractedFields.bibliografia),
+    "La bibliografía en protocolo individual no contiene numeración ni viñetas"
+  );
+
+  // 6.11: Ninguna palabra en la bibliografía sale en negrilla al generar docx
+  const bibRawContent = `1. Pressman, R. S. (2010). Ingeniería del software: un enfoque práctico. McGraw-Hill.
+2. Martin, R. C. (2017). Clean Architecture: A Craftsman's Guide to Software Structure and Design. Prentice Hall.`;
+  const bibXml = buildParagraphsXml(bibRawContent, undefined, { isBibliography: true });
+  assert(
+    !bibXml.includes("<w:b/>") && !bibXml.includes("<w:bCs/>"),
+    "buildParagraphsXml para bibliografía no genera ninguna etiqueta de negrilla (<w:b/>)"
+  );
+  assert(
+    !bibXml.includes("1.") && !bibXml.includes("2."),
+    "buildParagraphsXml para bibliografía elimina enumeraciones sobrantes"
+  );
+  assert(
+    bibXml.includes("Ingeniería del software: un enfoque práctico") &&
+    bibXml.includes("Clean Architecture: A Craftsman&apos;s Guide"),
+    "Los subtítulos con dos puntos en la bibliografía se conservan íntegros como texto plano"
+  );
+
+  // 6.12: Tipografía Times New Roman y viñetas de punto limpias en XML de Word
+  const sampleBullet = "• Microservicios vs Monolitos: Se debatió ampliamente sobre la modularidad.";
+  const sampleBulletXml = buildParagraphsXml(sampleBullet);
+  assert(
+    sampleBulletXml.includes("Times New Roman"),
+    "buildParagraphsXml inyecta la fuente Times New Roman en los estilos de párrafo"
+  );
+  assert(
+    sampleBulletXml.includes("<w:b/>") && sampleBulletXml.includes("• Microservicios vs Monolitos:"),
+    "buildParagraphsXml resalta el título de la viñeta con etiqueta de negrilla nativa sin asteriscos"
+  );
+  assert(
+    !sampleBulletXml.includes("*"),
+    "buildParagraphsXml no produce ningún asterisco literal en el XML generado"
+  );
+
   // -------------------------------------------------------------
   // Test 7: Normalización de Mayúsculas Sostenidas y Puntuación Anómala
   // -------------------------------------------------------------
@@ -376,8 +444,8 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
     "El prompt colaborativo no contiene temas en mayúsculas sostenidas"
   );
   assert(
-    builtPromptColab.includes("aborda fases de un pentesting"),
-    "El prompt colaborativo sustituyó correctamente [tema] en minúsculas naturales"
+    builtPromptColab.includes("fases de un pentesting"),
+    "El prompt colaborativo sustituyó correctamente el tema en minúsculas naturales"
   );
   assert(
     !builtPromptColab.includes("[tema]") && !builtPromptColab.includes("[TEMA]"),

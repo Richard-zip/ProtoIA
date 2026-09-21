@@ -20,8 +20,8 @@ PROHIBICIONES DE ESTILO (OBLIGATORIAS):
 
 REGLA DE VIÑETAS (OBLIGATORIA):
 - Las secciones Resumen de las discusiones grupales, Encuentros conceptuales y Desencuentros conceptuales deben presentar cada punto precedido por una viñeta de punto (•), NUNCA por números, guiones, asteriscos ni ningún otro símbolo.
-- El formato correcto es: "• **Nombre corto:** contenido del punto." Cada viñeta va en su propia línea o párrafo.
-- Está prohibido usar numeración (1., 2., 3...), guiones (-), asteriscos (*) u otros símbolos como marcadores de lista en estas tres secciones.
+- El formato correcto es: "• Nombre corto: contenido del punto." SIN asteriscos (* o **) en la viñeta ni en el nombre corto. Cada viñeta va en su propia línea o párrafo.
+- Está prohibido usar numeración (1., 2., 3...), guiones (-), asteriscos (*) o (**) en estas tres secciones.
 - La única excepción es la introducción de una línea que precede al listado del resumen de discusiones grupales, la cual no lleva viñeta.
 
 REGLA DE IMPERSONALIDAD Y FORMALIDAD EN LAS DISCUSIONES:
@@ -98,14 +98,14 @@ Redacta una introducción breve de una sola línea con este formato exacto (sin 
 
 Luego genera EXACTAMENTE 6 puntos, cada uno precedido por una viñeta de punto (•), con este formato obligatorio:
 
-• **Nombre corto del tema en 3-6 palabras:** [Primera postura presentada de forma impersonal, usando verbos como "se argumentaba que", "se defendía que", "se sostenía que", "se planteaba que"] [conector de contraste formal, por ejemplo: "mientras que", "aunque", "por otro lado", "también se defendía que", "sin embargo"] [Segunda postura opuesta presentada también de forma impersonal]. [Cierre alternando entre "Concordamos en que..." y "No hubo consenso sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
+• Nombre corto del tema en 3-6 palabras: [Primera postura presentada de forma impersonal, usando verbos como "se argumentaba que", "se defendía que", "se sostenía que", "se planteaba que"] [conector de contraste formal, por ejemplo: "mientras que", "aunque", "por otro lado", "también se defendía que", "sin embargo"] [Segunda postura opuesta presentada también de forma impersonal]. [Cierre alternando entre "Concordamos en que..." y "No hubo consenso sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
 
 Reglas estrictas para esta sección:
 - Cada punto DEBE comenzar con una viñeta de punto (•), nunca con números, guiones, asteriscos ni ningún otro símbolo.
 - PROHIBIDO mencionar integrantes, usar "algunos comentaban", "otros decían", "un compañero argumentaba", "yo sostuve" o cualquier fórmula que personalice las posturas.
 - Usa exclusivamente construcciones impersonales: "se argumentaba que", "se defendía que", "se sostenía que", "hubo diferentes posiciones sobre", "una posición planteaba que", "otra postura advertía que", "se propuso", "se objetó que", "se consideró razonable", "se exigió que".
 - Cada punto debe tratar un aspecto DISTINTO y específico del contenido, basado en tensiones reales (trade-offs, decisiones de diseño, aplicabilidad práctica), no genérico.
-- El nombre corto en negrilla debe ser conciso y técnico.
+- El nombre corto debe ser conciso y técnico, seguido de dos puntos, sin asteriscos.
 - No repitas el mismo conector de contraste en puntos consecutivos.
 - La redacción debe ser en prosa continua, sin cortes bruscos ni frases telegráficas.
 
@@ -132,7 +132,7 @@ DESENCUENTROS CONCEPTUALES
 
 Genera EXACTAMENTE 6 puntos, cada uno precedido por una viñeta de punto (•), con este formato obligatorio:
 
-• **Nombre corto del desacuerdo en 3-6 palabras:** [Postura A presentada de forma impersonal, con verbos como "se sostuvo que", "se defendió que", "se consideró que"] mientras que [Postura B presentada también de forma impersonal, con verbos como "se advirtió que", "se objetó que", "se exigió que"]. [Cierre alternando entre "No hubo consenso sobre..." y "No se llegó a acuerdo sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
+• Nombre corto del desacuerdo en 3-6 palabras: [Postura A presentada de forma impersonal, con verbos como "se sostuvo que", "se defendió que", "se consideró que"] mientras que [Postura B presentada también de forma impersonal, con verbos como "se advirtió que", "se objetó que", "se exigió que"]. [Cierre alternando entre "No hubo consenso sobre..." y "No se llegó a acuerdo sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
 
 Reglas estrictas para esta sección:
 - Cada punto DEBE comenzar con una viñeta de punto (•), nunca con números, guiones, asteriscos ni ningún otro símbolo.
@@ -182,20 +182,22 @@ Presenta las recomendaciones como párrafos de prosa continua, uno debajo del ot
 
 BIBLIOGRAFÍA
 
-Genera entre 8 y 10 referencias en formato APA 7.ª edición, numeradas del 1 al 10, ordenadas alfabéticamente por apellido de autor, sin usar asteriscos ni cursivas marcadas con símbolos; escribe los títulos en texto plano.
+Genera entre 8 y 10 referencias en formato APA 7.ª edición, ordenadas alfabéticamente por apellido de autor, sin numeración, sin enumeraciones, sin viñetas y sin asteriscos; escribe todo en texto plano sin ninguna palabra en negrilla.
 
 Reglas obligatorias:
+- PROHIBIDO incluir números (1., 2., etc.), viñetas, guiones, asteriscos o cualquier tipo de enumeración o lista marcada. Cada referencia debe iniciar directamente con el autor o entidad emisora.
+- PROHIBIDO usar negrilla (**) o cursiva (*) en cualquier parte de las referencias bibliográficas. Todos los títulos, subtítulos, nombres, editoriales y palabras deben estar en texto plano normal, sin formato especial.
 - Prioriza fuentes publicadas en los últimos cinco años (2020 en adelante). Solo admite una o dos referencias clásicas si son indispensables.
 - Incluye la mayor cantidad posible de referencias provenientes de la Universidad de Cartagena (Colombia): tesis, artículos de revistas institucionales, working papers o publicaciones del repositorio institucional. La prioridad es que la mayoría de las referencias pertenezcan a esa universidad. Si no existen suficientes fuentes exactas de esa institución, completa con publicaciones colombianas equivalentes (por ejemplo, Universidad Nacional de Colombia, Universidad de los Andes, MinTIC, Icontec) y aclara que son aproximaciones.
 - Mezcla mínimo 2 libros técnicos reconocidos del área, mínimo 2 estándares internacionales vigentes, mínimo 1 recurso online oficial y el resto artículos académicos recientes o guías complementarias.
 - Cada referencia debe incluir autor o entidad, año, título, fuente y editorial o entidad emisora, respetando la puntuación y el orden APA 7.ª edición (autor, año, título, fuente, DOI o URL cuando aplique).
 - No inventes referencias: solo incluye publicaciones reales y verificables.
 
-Formato de salida obligatorio (una referencia por línea, numerada, sin viñetas ni asteriscos):
+Formato de salida obligatorio (una referencia por párrafo, sin enumeraciones, sin números, sin viñetas y sin negrillas):
 
-1. Apellido, A. A. (Año). Título del trabajo. Editorial.
+Apellido, A. A. (Año). Título del trabajo. Editorial.
 
-2. Entidad emisora. (Año). Título de la norma o documento. URL o DOI.
+Entidad emisora. (Año). Título de la norma o documento. URL o DOI.
 
 Genera un protocolo profesional.
 `;

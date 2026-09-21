@@ -183,15 +183,18 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
         ["protocolo", "colaborativo", ...input.temas.map((t) => this.cleanTopicName(t, true)).filter(Boolean).slice(0, 6)].join(", "),
       objetivos: this.formatObjectives(rawObjetivos),
       conceptos: this.formatConceptDefinitions(rawConceptos),
-      resumen:
+      resumen: this.formatDiscussionSummary(
         sections.resumen ||
-        `Se analizaron los aspectos más relevantes de ${firstTema} mediante discusión colaborativa.`,
-      encuentros:
+          `Se analizaron los aspectos más relevantes de ${firstTema} mediante discusión colaborativa.`
+      ),
+      encuentros: this.formatConceptualAgreements(
         sections.encuentros ||
-        "El grupo coincidió en la importancia de trabajar de forma colaborativa y estructurada.",
-      desacuerdos:
+          "El grupo coincidió en la importancia de trabajar de forma colaborativa y estructurada."
+      ),
+      desacuerdos: this.formatConceptualDisagreements(
         sections.desacuerdos ||
-        "Se identificaron diferencias sobre la aplicación práctica de ciertas decisiones de diseño.",
+          "Se identificaron diferencias sobre la aplicación práctica de ciertas decisiones de diseño."
+      ),
       metodologia:
         rawMetodologia ||
         "La actividad se desarrolló mediante investigación individual, discusión grupal y consolidación conjunta.",
@@ -199,7 +202,7 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
         sections.conclusiones ||
         `Se concluyó que ${firstTema} requiere un análisis integral y una aplicación práctica sostenida.`,
       recomendaciones: this.formatRecommendations(rawRecomendaciones),
-      bibliografia: sections.bibliografia || "Bibliografía por completar.",
+      bibliografia: this.formatBibliography(sections.bibliografia),
       temas: fallbackTemas || "Temas por definir",
     };
 
@@ -208,6 +211,85 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
     }
 
     return result;
+  }
+
+  protected formatDiscussionSummary(text: string): string {
+    if (!text) return text;
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) return text;
+
+    const formatted = lines.map((line, index) => {
+      // Si es la primera línea y corresponde a la introducción (ej: "Durante las discusiones...")
+      if (
+        index === 0 &&
+        (/^(durante|en las discusiones|a lo largo de)/i.test(line) ||
+          (!line.includes(":") && !line.startsWith("•") && !line.startsWith("-")))
+      ) {
+        return line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").replace(/\*/g, "").trim();
+      }
+
+      // Remover cualquier viñeta, guion, número previo y asteriscos
+      const content = line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").trim();
+
+      const colonIndex = content.indexOf(":");
+      if (colonIndex !== -1) {
+        const topic = content.slice(0, colonIndex).replace(/\*/g, "").trim();
+        const rest = content.slice(colonIndex + 1).replace(/^[*:\s]+/, "").replace(/\*/g, "").trim();
+        return `• ${topic}: ${rest}`;
+      }
+
+      const cleanContent = content.replace(/\*/g, "").trim();
+      return `• ${cleanContent}`;
+    });
+
+    return formatted.join("\n\n");
+  }
+
+  protected formatConceptualAgreements(text: string): string {
+    if (!text) return text;
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) return text;
+
+    const formatted = lines.map((line) => {
+      const content = line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").replace(/\*/g, "").trim();
+      return `• ${content}`;
+    });
+
+    return formatted.join("\n\n");
+  }
+
+  protected formatConceptualDisagreements(text: string): string {
+    if (!text) return text;
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) return text;
+
+    const formatted = lines.map((line) => {
+      const content = line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").trim();
+
+      const colonIndex = content.indexOf(":");
+      if (colonIndex !== -1) {
+        const topic = content.slice(0, colonIndex).replace(/\*/g, "").trim();
+        const rest = content.slice(colonIndex + 1).replace(/^[*:\s]+/, "").replace(/\*/g, "").trim();
+        return `• ${topic}: ${rest}`;
+      }
+
+      const cleanContent = content.replace(/\*/g, "").trim();
+      return `• ${cleanContent}`;
+    });
+
+    return formatted.join("\n\n");
   }
 
   getTemplateTargets(extracted: Record<string, string>): TemplateTarget[] {

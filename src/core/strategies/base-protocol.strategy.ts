@@ -144,6 +144,8 @@ export abstract class BaseProtocolStrategy implements IProtocolStrategy {
       .join(materiaLimpia)
       .split("[TEMAS]")
       .join(temasTexto)
+      .split("[tema con término paraguas]")
+      .join(primerTemaLimpio)
       .split("[tema]")
       .join(primerTemaLimpio)
       .split("[TEMA]")
@@ -156,7 +158,7 @@ export abstract class BaseProtocolStrategy implements IProtocolStrategy {
   protected normalizeSectionText(value: string): string {
     const cleaned = value
       .replace(/^#+\s*/gm, "")
-      .replace(/^(?:[-•]|\*(?!\*))\s+/gm, "")
+      .replace(/^(?:[-–—]|\*(?!\*))\s+/gm, "")
       .replace(/[ \t]+/g, " ")
       .replace(/\n{3,}/g, "\n\n")
       .replace(/[ \t]*\n[ \t]*/g, "\n")
@@ -227,6 +229,52 @@ export abstract class BaseProtocolStrategy implements IProtocolStrategy {
       "**Pregunta para discusión:** $1"
     );
     return cleaned.trim();
+  }
+
+  protected formatBibliography(text: string): string {
+    if (!text) return "Bibliografía por completar.";
+    const lines = text
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    const cleanLines = lines.filter(
+      (l) => !/^(?:bibliograf[ií]a|referencias)/i.test(l.replace(/^#+\s*/, ""))
+    );
+    const entries: string[] = [];
+    let currentEntry = "";
+
+    for (const line of cleanLines) {
+      // Remove any bold/italic markdown
+      const cleanLine = line.replace(/\*\*/g, "").replace(/\*/g, "").replace(/__/g, "");
+      // Check if this line starts a new reference (has number marker or starts with author/capital letter after dot)
+      const startsWithMarker = /^(?:\[\d+\]|\d+[.)]|\d+\s*[-–—]\s*|[-•*])\s*/u.test(cleanLine);
+      const stripped = cleanLine.replace(/^(?:\[\d+\]|\d+[.)]|\d+\s*[-–—]\s*|[-•*])\s*/u, "").trim();
+
+      if (
+        startsWithMarker ||
+        (currentEntry &&
+          /^[A-ZÁÉÍÓÚÑ]/.test(stripped) &&
+          !/^(?:y|e|o|u|de|del|en|para|por|con|a)\b/i.test(stripped) &&
+          currentEntry.endsWith("."))
+      ) {
+        if (currentEntry) {
+          entries.push(currentEntry);
+        }
+        currentEntry = stripped;
+      } else if (!currentEntry) {
+        currentEntry = stripped;
+      } else {
+        currentEntry += ` ${stripped}`;
+      }
+    }
+
+    if (currentEntry) {
+      entries.push(currentEntry);
+    }
+
+    if (entries.length === 0) return "Bibliografía por completar.";
+    return entries.join("\n\n");
   }
 
   protected ensureEndsWithPeriod(value: string): string {

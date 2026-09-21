@@ -103,16 +103,18 @@ DISCUSIONES Y RECOMENDACIONES
 
 BIBLIOGRAFÍA
 
-Genera entre 8 y 10 referencias en formato APA 7.ª edición, sin usar asteriscos ni cursivas marcadas con símbolos; escribe los títulos en texto plano.
+Genera entre 8 y 10 referencias en formato APA 7.ª edición, ordenadas alfabéticamente por apellido de autor, sin enumeraciones, sin numeración, sin viñetas y sin asteriscos; escribe todo en texto plano sin ninguna palabra en negrilla.
 
 Reglas obligatorias:
+- PROHIBIDO incluir enumeraciones, números (1., 2., etc.), viñetas, guiones, asteriscos o cualquier tipo de marcador. Cada referencia debe comenzar directamente con el autor o entidad emisora.
+- PROHIBIDO usar negrilla (**) o cursiva (*) en cualquier parte de las referencias bibliográficas. Todas las palabras deben ser texto normal plano sin formato en negrilla.
 - Prioriza fuentes publicadas en los últimos cinco años (2020 en adelante). Solo admite una o dos referencias clásicas si son indispensables (por ejemplo, IEEE 830 de 1998 o el PMBOK en su edición más reciente).
 - Incluye la mayor cantidad posible de referencias provenientes de la Universidad de Cartagena (Colombia): tesis, artículos de revistas institucionales, working papers o publicaciones del repositorio institucional. La prioridad es que la mayoría de las referencias pertenezcan a esa universidad. Si no existen suficientes fuentes exactas de esa institución, completa con publicaciones colombianas equivalentes (por ejemplo, Universidad Nacional de Colombia, Universidad de los Andes, MinTIC, Icontec) y aclara que son aproximaciones.
 - Mezcla estándares internacionales vigentes (ISO 21500:2021, ISO/IEC 25010:2018 o su actualización, ISO/IEC 27001:2022, ISO/IEC/IEEE 29119, OWASP Top 10:2021, PMBOK 7.ª edición), artículos académicos recientes y recursos online oficiales.
 - Cada referencia debe incluir autor o entidad, año, título, fuente y editorial o entidad emisora, respetando la puntuación y el orden APA 7.ª edición (autor, año, título, fuente, DOI o URL cuando aplique).
 - No inventes referencias: solo incluye publicaciones reales y verificables. Si no estás seguro de un dato, prioriza una fuente equivalente que sí puedas citar con exactitud.
 
-Formato de salida obligatorio (una referencia por línea, sin viñetas ni numeración):
+Formato de salida obligatorio (una referencia por línea o párrafo, sin enumeraciones, sin viñetas ni numeración y sin negrillas):
 
 Apellido, A. A. (Año). Título del trabajo. Editorial.
 

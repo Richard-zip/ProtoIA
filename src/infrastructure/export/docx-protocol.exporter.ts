@@ -72,7 +72,22 @@ export class DocxProtocolExporter implements IDocumentExporter {
     }
 
     updatedXml = newXmlParts.join("");
+    // Garantizar que la tipografía del documento sea Times New Roman
+    updatedXml = updatedXml
+      .replace(/w:ascii="(?!Times New Roman)[^"]*"/g, 'w:ascii="Times New Roman"')
+      .replace(/w:hAnsi="(?!Times New Roman)[^"]*"/g, 'w:hAnsi="Times New Roman"')
+      .replace(/w:cs="(?!Times New Roman)[^"]*"/g, 'w:cs="Times New Roman"');
     zip.file(documentPath, updatedXml);
+
+    const stylesPath = "word/styles.xml";
+    const stylesXml = await zip.file(stylesPath)?.async("string");
+    if (stylesXml) {
+      const updatedStylesXml = stylesXml
+        .replace(/w:ascii="(?!Times New Roman)[^"]*"/g, 'w:ascii="Times New Roman"')
+        .replace(/w:hAnsi="(?!Times New Roman)[^"]*"/g, 'w:hAnsi="Times New Roman"')
+        .replace(/w:cs="(?!Times New Roman)[^"]*"/g, 'w:cs="Times New Roman"');
+      zip.file(stylesPath, updatedStylesXml);
+    }
 
     const blob = await zip.generateAsync({
       type: "blob",

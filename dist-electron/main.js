@@ -279,7 +279,7 @@ ipcMain.handle("generate-pdf-from-html", async (_event, { html, title }) => {
       padding: 0 !important;
       background: #ffffff !important;
       color: #000000 !important;
-      font-family: "Calibri", "Carlito", "Segoe UI", Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+      font-family: "Times New Roman", Times, "Liberation Serif", serif !important;
       -webkit-font-smoothing: antialiased !important;
       text-rendering: optimizeLegibility !important;
     }

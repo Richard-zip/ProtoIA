@@ -81,16 +81,10 @@ export function extractParagraphStyles(headingParagraph: string): { pPr: string;
     pPr = `<w:pPr>${compactSpacing}</w:pPr>`;
   }
 
-  // Prefer the run properties from the first run that carries font info.
-  const runMatches = headingParagraph.match(/<w:r\b[^>]*>[\s\S]*?<\/w:r>/g) || [];
-  let rPrInner = "";
-  for (const run of runMatches) {
-    const rPr = run.match(/<w:rPr>([\s\S]*?)<\/w:rPr>/);
-    if (rPr && rPr[1].includes("w:rFonts")) {
-      rPrInner = rPr[1];
-      break;
-    }
-  }
+  // Use Times New Roman font for all runs
+  const timesFont = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman" />';
+  let rPrInner = timesFont;
+
   // Remove bold and heading color/size so body text looks like normal content.
   rPrInner = rPrInner
     .replace(/<w:b\b[^>]*\/>/g, "")
@@ -108,7 +102,7 @@ export function extractParagraphStyles(headingParagraph: string): { pPr: string;
 
 /**
  * Returns a bold variant of the given run properties by injecting <w:b/> and
- * <w:bCs/> so the label of title-like lines renders in bold.
+ * <w:bCs/> so the label of title-like lines renders in bold with Times New Roman.
  */
 export function makeBoldRPr(rPr: string): string {
   const inner = rPr
@@ -116,12 +110,15 @@ export function makeBoldRPr(rPr: string): string {
     .replace(/<\/w:rPr>$/, "")
     .replace(/<w:b\b[^>]*\/>/g, "")
     .replace(/<w:bCs\b[^>]*\/>/g, "");
-  const rFontsMatch = inner.match(/<w:rFonts\b[^>]*\/>/);
+  const timesFont = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman" />';
+  let withFont = inner;
+  if (/<w:rFonts\b[^>]*\/>/.test(withFont)) {
+    withFont = withFont.replace(/<w:rFonts\b[^>]*\/>/, timesFont);
+  } else {
+    withFont = `${timesFont}${withFont}`;
+  }
   const boldTags = "<w:b/><w:bCs/>";
-  const withBold = rFontsMatch
-    ? inner.replace(rFontsMatch[0], `${rFontsMatch[0]}${boldTags}`)
-    : `${boldTags}${inner}`;
-  return `<w:rPr>${withBold}</w:rPr>`;
+  return `<w:rPr>${boldTags}${withFont}</w:rPr>`;
 }
 
 export function splitLabel(paragraph: string): { label: string; rest: string } | null {
@@ -129,28 +126,33 @@ export function splitLabel(paragraph: string): { label: string; rest: string } |
   if (!trimmed) return null;
 
   // Case A: Markdown bold concept/term at start:
-  // e.g. **Concepto:** Def, **Concepto**: Def, 1. **Concepto:** Def, - **Concepto:** Def
+  // e.g. **Concepto:** Def, **Concepto**: Def, 1. **Concepto:** Def, - **Concepto:** Def, • **Concepto:** Def
   const boldMatch = trimmed.match(
     /^((?:(?:\d+[.)]|[-*•])\s+)?)\*\*([^*\n]+?)\*\*(?::\s*|\s*:\s*)?(.*)$/
   );
   if (boldMatch) {
-    const marker = boldMatch[1] || "";
-    let term = boldMatch[2].trim();
+    let marker = (boldMatch[1] || "").trim();
+    if (marker === "*" || marker === "-") marker = "•";
+    const markerPrefix = marker ? `${marker} ` : "";
+    let term = boldMatch[2].replace(/\*/g, "").trim();
     if (term.endsWith(":")) {
       term = term.slice(0, -1).trim();
     }
-    const rest = (boldMatch[3] || "").trim();
+    const rest = (boldMatch[3] || "").replace(/^[*:\s]+/, "").trim();
     return {
-      label: `${marker}${term}:`,
+      label: `${markerPrefix}${term}:`.replace(/\*/g, ""),
       rest,
     };
   }
 
-  // Case B: Plain colon label: e.g. "Concepto: Def", "1. Concepto: Def", "- Concepto: Def"
+  // Case B: Plain colon label: e.g. "Concepto: Def", "• Concepto: Def", "1. Concepto: Def"
   const colonIndex = trimmed.indexOf(":");
   if (colonIndex !== -1) {
-    const rawLabel = trimmed.slice(0, colonIndex).trim();
-    const labelWithoutMarker = rawLabel.replace(/^(?:\d+[.)]|[-*•])\s+/, "").trim();
+    let rawLabel = trimmed.slice(0, colonIndex).trim();
+    if (/^[*]\s+/.test(rawLabel)) {
+      rawLabel = rawLabel.replace(/^[*]\s+/, "• ");
+    }
+    const labelWithoutMarker = rawLabel.replace(/^(?:\d+[.)]|[-*•])\s+/, "").replace(/\*/g, "").trim();
     if (
       labelWithoutMarker.length > 0 &&
       labelWithoutMarker.length <= 70 &&
@@ -158,9 +160,10 @@ export function splitLabel(paragraph: string): { label: string; rest: string } |
       !/[?!]/.test(labelWithoutMarker) &&
       !/[.]{2,}/.test(labelWithoutMarker)
     ) {
-      const rest = trimmed.slice(colonIndex + 1).trim();
+      const rest = trimmed.slice(colonIndex + 1).replace(/^[*:\s]+/, "").trim();
+      const cleanRawLabel = rawLabel.replace(/\*/g, "").trim();
       return {
-        label: `${rawLabel}:`,
+        label: `${cleanRawLabel}:`.replace(/\*/g, ""),
         rest,
       };
     }
@@ -180,9 +183,14 @@ export function splitLabelOrListMarker(paragraph: string): { label: string; rest
     return null;
   }
 
+  let marker = match[1];
+  if (marker === "*" || marker === "-") {
+    marker = "•";
+  }
+
   return {
-    label: match[1],
-    rest: match[2].trim(),
+    label: marker.replace(/\*/g, ""),
+    rest: match[2].replace(/^[*:\s]+/, "").trim(),
   };
 }
 
@@ -195,17 +203,34 @@ export function formatRunsXml(text: string, rPr: string, boldRPr: string): strin
   for (const part of parts) {
     if (!part) continue;
     if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
-      const content = part.slice(2, -2);
+      const content = part.slice(2, -2).replace(/\*/g, "");
       xml += `<w:r>${boldRPr}<w:t xml:space="preserve">${escapeXml(content)}</w:t></w:r>`;
     } else {
-      xml += `<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(part)}</w:t></w:r>`;
+      const content = part.replace(/\*/g, "");
+      xml += `<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(content)}</w:t></w:r>`;
     }
   }
 
   return xml;
 }
 
-export function buildParagraphsXml(text: string, styles?: { pPr: string; rPr: string }): string {
+export function isBibliographyHeading(heading: string | string[]): boolean {
+  const headings = Array.isArray(heading) ? heading : [heading];
+  return headings.some((candidate) => {
+    const norm = normalizeText(candidate);
+    return (
+      norm.includes("bibliografia") ||
+      norm.includes("referencias") ||
+      norm.includes("fuentes consultadas")
+    );
+  });
+}
+
+export function buildParagraphsXml(
+  text: string,
+  styles?: { pPr: string; rPr: string },
+  options?: { isBibliography?: boolean }
+): string {
   const paragraphs = text
     .split(/\r?\n/)
     .map((block) => block.trim())
@@ -218,12 +243,24 @@ export function buildParagraphsXml(text: string, styles?: { pPr: string; rPr: st
   const pPr = styles?.pPr ?? "";
   const rPr = styles?.rPr ?? "";
   const boldRPr = makeBoldRPr(rPr);
+  const isBibliography = options?.isBibliography ?? false;
 
   return paragraphs
     .map((paragraph) => {
+      if (isBibliography) {
+        // En la bibliografía: SIN enumeraciones, SIN viñetas y SIN NINGUNA palabra en negrilla.
+        const cleanBib = paragraph
+          .replace(/^(?:\[\d+\]|\d+[.)]|\d+\s*[-–—]\s*|[-•*])\s*/u, "")
+          .replace(/\*/g, "")
+          .replace(/__/g, "")
+          .trim();
+        return `<w:p>${pPr}<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(cleanBib)}</w:t></w:r></w:p>`;
+      }
+
       const label = splitLabelOrListMarker(paragraph);
       if (label) {
-        const boldRun = `<w:r>${boldRPr}<w:t xml:space="preserve">${escapeXml(label.label)}</w:t></w:r>`;
+        const cleanLabel = label.label.replace(/\*/g, "");
+        const boldRun = `<w:r>${boldRPr}<w:t xml:space="preserve">${escapeXml(cleanLabel)}</w:t></w:r>`;
         const restRuns = label.rest ? formatRunsXml(` ${label.rest}`, rPr, boldRPr) : "";
         return `<w:p>${pPr}${boldRun}${restRuns}</w:p>`;
       }
@@ -262,7 +299,8 @@ export function insertContentInCell(cellXml: string, heading: string | string[],
       injected = true;
       const paragraphWithColon = appendColonIfMissing(paragraph);
       const styles = extractParagraphStyles(paragraphWithColon);
-      parts.push(paragraphWithColon + buildParagraphsXml(content, styles));
+      const isBib = isBibliographyHeading(heading) || isBibliographyHeading(stripTags(paragraph));
+      parts.push(paragraphWithColon + buildParagraphsXml(content, styles, { isBibliography: isBib }));
     } else {
       // Discard empty template paragraphs that follow after content injection
       const isEmpty = stripTags(paragraph).trim().length === 0;
