@@ -13,7 +13,13 @@ export class GeminiAIService implements IAIService {
     this.client = this.apiKey ? new GoogleGenerativeAI(this.apiKey) : null;
   }
 
-  async generateContent(prompt: string): Promise<string> {
+  async generateContent(prompt: string, signal?: AbortSignal): Promise<string> {
+    if (signal?.aborted) {
+      const abortError = new Error("Generación de protocolo detenida por el usuario.");
+      abortError.name = "AbortError";
+      throw abortError;
+    }
+
     if (!this.client || !this.apiKey) {
       throw new Error("No se ha configurado la API Key de Gemini. Por favor ingresa tu API Key en la barra superior para continuar.");
     }
@@ -24,11 +30,44 @@ export class GeminiAIService implements IAIService {
 
     const maxRetries = 1;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      if (signal?.aborted) {
+        const abortError = new Error("Generación de protocolo detenida por el usuario.");
+        abortError.name = "AbortError";
+        throw abortError;
+      }
+
       try {
-        const result = await model.generateContent(prompt);
+        const generatePromise = model.generateContent(prompt);
+        let result;
+        if (signal) {
+          result = await Promise.race([
+            generatePromise,
+            new Promise<never>((_, reject) => {
+              const onAbort = () => {
+                const abortError = new Error("Generación de protocolo detenida por el usuario.");
+                abortError.name = "AbortError";
+                reject(abortError);
+              };
+              if (signal.aborted) {
+                onAbort();
+              } else {
+                signal.addEventListener("abort", onAbort, { once: true });
+              }
+            }),
+          ]);
+        } else {
+          result = await generatePromise;
+        }
+
         const response = await result.response;
         return response.text();
       } catch (err) {
+        if (signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
+          const abortError = new Error("Generación de protocolo detenida por el usuario.");
+          abortError.name = "AbortError";
+          throw abortError;
+        }
+
         const parsed = parseGeminiError(err);
         if (parsed.isHighDemand && attempt < maxRetries) {
           // Breve pausa para superar el micro-pico de demanda temporal en los servidores de Google

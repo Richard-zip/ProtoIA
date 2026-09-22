@@ -72,7 +72,16 @@ export class DocxProtocolExporter implements IDocumentExporter {
     }
 
     updatedXml = newXmlParts.join("");
-    // Garantizar que la tipografía del documento sea Times New Roman
+
+    // 1. Eliminar cualquier párrafo sobrante después de la tabla principal y sustituirlo
+    // por un único párrafo de 1pt con margen cero, para evitar que se cree una página en blanco al final.
+    updatedXml = updatedXml.replace(
+      /<\/w:tbl>[\s\S]*?<w:sectPr\b/g,
+      '</w:tbl><w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/><w:szCs w:val="2"/></w:rPr></w:pPr></w:p><w:sectPr'
+    );
+    updatedXml = updatedXml.replace(/<w:type\s+w:val="nextPage"\s*\/>/g, '<w:type w:val="continuous"/>');
+
+    // 2. Garantizar que la tipografía del documento sea Times New Roman
     updatedXml = updatedXml
       .replace(/w:ascii="(?!Times New Roman)[^"]*"/g, 'w:ascii="Times New Roman"')
       .replace(/w:hAnsi="(?!Times New Roman)[^"]*"/g, 'w:hAnsi="Times New Roman"')

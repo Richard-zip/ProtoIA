@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Protocol } from "../../core/entities/protocol.entity";
 import { AppContainer, container as defaultContainer } from "../../infrastructure/di/container";
 
@@ -16,6 +16,17 @@ export function useProtocolController(
   const [exportingPdf, setExportingPdf] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleStop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      appContainer.logger.info("Generación de protocolo detenida por el usuario.");
+      abortControllerRef.current = null;
+      setLoading(false);
+    }
+  }, [appContainer]);
 
   // Subscribe to logger events
   useEffect(() => {
@@ -62,15 +73,30 @@ export function useProtocolController(
     setErrorMessage(null);
     setLoading(true);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const generatedProtocol = await appContainer.generateProtocolUseCase.execute({
-        materia,
-        temas: temasFiltrados,
-        participantes: participantesFiltrados,
-        tipo,
-      });
+      const generatedProtocol = await appContainer.generateProtocolUseCase.execute(
+        {
+          materia,
+          temas: temasFiltrados,
+          participantes: participantesFiltrados,
+          tipo,
+        },
+        controller.signal
+      );
       setCurrentProtocol(generatedProtocol);
     } catch (err) {
+      if (
+        controller.signal.aborted ||
+        (err instanceof Error && err.name === "AbortError") ||
+        (err instanceof Error && err.message.toLowerCase().includes("detenida")) ||
+        (err instanceof Error && err.message.toLowerCase().includes("cancelada"))
+      ) {
+        // Cancelado limpiamente por el usuario
+        return;
+      }
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMessage(msg);
       if (msg.toLowerCase().includes("api key") && onRequestConfig) {
@@ -78,6 +104,7 @@ export function useProtocolController(
       }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -131,6 +158,7 @@ export function useProtocolController(
     logs,
     errorMessage,
     handleGenerate,
+    handleStop,
     handleExportWord,
     handleExportPdf,
   };

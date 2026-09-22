@@ -322,24 +322,21 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
     "Las discusiones y recomendaciones se extraen del markdown de Gemini"
   );
 
-  // 6.9: Viñetas de puntos (•) en protocolo colaborativo (resumen, encuentros y desencuentros) sin asteriscos
+  // 6.9: Viñetas de puntos (•) en protocolo colaborativo (resumen, encuentros y desencuentros)
   assert(
-    colabResult.extractedFields.resumen.includes("• Microservicios vs Monolitos:") &&
-    colabResult.extractedFields.resumen.includes("• Inversión de Dependencias:") &&
-    !colabResult.extractedFields.resumen.includes("*"),
-    "El resumen de discusiones grupales presenta cada punto precedido por una viñeta de punto (•) y sin asteriscos"
+    colabResult.extractedFields.resumen.includes("• **Microservicios vs Monolitos:**") &&
+    colabResult.extractedFields.resumen.includes("• **Inversión de Dependencias:**"),
+    "El resumen de discusiones grupales presenta cada punto con viñeta de punto (•) y título en negrilla con asteriscos"
   );
   assert(
     colabResult.extractedFields.encuentros.includes("• Todos concordamos en que") &&
-    colabResult.extractedFields.encuentros.includes("• Hubo acuerdo unánime en que") &&
-    !colabResult.extractedFields.encuentros.includes("*"),
-    "Los encuentros conceptuales presentan cada punto precedido por una viñeta de punto (•) y sin asteriscos"
+    colabResult.extractedFields.encuentros.includes("• Hubo acuerdo unánime en que"),
+    "Los encuentros conceptuales presentan cada punto precedido por una viñeta de punto (•)"
   );
   assert(
-    colabResult.extractedFields.desacuerdos.includes("• Selección de persistencia relacional vs NoSQL:") &&
-    colabResult.extractedFields.desacuerdos.includes("• Uso de ORM vs Queries nativos:") &&
-    !colabResult.extractedFields.desacuerdos.includes("*"),
-    "Los desencuentros conceptuales presentan cada punto precedido por una viñeta de punto (•) y sin asteriscos"
+    colabResult.extractedFields.desacuerdos.includes("• **Selección de persistencia relacional vs NoSQL:**") &&
+    colabResult.extractedFields.desacuerdos.includes("• **Uso de ORM vs Queries nativos:**"),
+    "Los desencuentros conceptuales presentan cada punto con viñeta de punto (•) y título en negrilla con asteriscos"
   );
 
   // 6.10: La bibliografía no tiene enumeraciones ni viñetas
@@ -375,19 +372,30 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
   );
 
   // 6.12: Tipografía Times New Roman y viñetas de punto limpias en XML de Word
-  const sampleBullet = "• Microservicios vs Monolitos: Se debatió ampliamente sobre la modularidad.";
-  const sampleBulletXml = buildParagraphsXml(sampleBullet);
+  const sampleBulletWithBold = "• **Enfoque cuantitativo frente al cualitativo:** se argumentaba que la matriz cualitativa...";
+  const sampleBulletXml = buildParagraphsXml(sampleBulletWithBold);
   assert(
     sampleBulletXml.includes("Times New Roman"),
     "buildParagraphsXml inyecta la fuente Times New Roman en los estilos de párrafo"
   );
   assert(
-    sampleBulletXml.includes("<w:b/>") && sampleBulletXml.includes("• Microservicios vs Monolitos:"),
+    sampleBulletXml.includes("<w:b/>") && sampleBulletXml.includes("• Enfoque cuantitativo frente al cualitativo:"),
     "buildParagraphsXml resalta el título de la viñeta con etiqueta de negrilla nativa sin asteriscos"
   );
   assert(
     !sampleBulletXml.includes("*"),
-    "buildParagraphsXml no produce ningún asterisco literal en el XML generado"
+    "buildParagraphsXml no produce ningún asterisco literal en el XML generado para viñetas con nombre corto"
+  );
+
+  const sampleEncuentroNoColon = "• **Todos concordamos en que** el análisis de riesgos es el punto de partida...";
+  const sampleEncuentroXml = buildParagraphsXml(sampleEncuentroNoColon);
+  assert(
+    sampleEncuentroXml.includes("<w:b/>") && sampleEncuentroXml.includes("• Todos concordamos en que"),
+    "buildParagraphsXml resalta la fórmula de apertura sin añadir dos puntos artificiales"
+  );
+  assert(
+    !sampleEncuentroXml.includes("*"),
+    "buildParagraphsXml no produce asteriscos en la apertura de encuentros conceptuales"
   );
 
   // -------------------------------------------------------------
@@ -671,6 +679,105 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
   assert(
     docxPreviewTs.includes("protocol-paper-sheet"),
     "DocxPreview.tsx renderiza hojas de papel físicas con numeración oficial"
+  );
+
+  // -------------------------------------------------------------
+  // Test 13: Cancelación de generación con Stop / AbortController
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 13: Cancelación limpia de generación con Stop (AbortSignal) ---");
+  const abortController = new AbortController();
+  abortController.abort(); // Cancelar anticipadamente
+
+  let didAbortCatch = false;
+  try {
+    await generateUseCase.execute(
+      {
+        materia: "Ingeniería de Software",
+        temas: ["Arquitectura de Software"],
+        participantes: [],
+        tipo: "colaborativo",
+      },
+      abortController.signal
+    );
+  } catch (err: unknown) {
+    if (err instanceof Error && (err.name === "AbortError" || err.message.toLowerCase().includes("detenid") || err.message.toLowerCase().includes("cancelad"))) {
+      didAbortCatch = true;
+    }
+  }
+  assert(didAbortCatch, "GenerateProtocolUseCase aborta inmediatamente y lanza AbortError cuando el AbortSignal es cancelado");
+
+  const hookCode = fs.readFileSync("src/presentation/hooks/useProtocolController.ts", "utf-8");
+  assert(hookCode.includes("handleStop"), "useProtocolController expone la función handleStop para cancelar");
+  assert(hookCode.includes("abortControllerRef"), "useProtocolController gestiona abortControllerRef de forma reactiva");
+
+  const formCode = fs.readFileSync("src/presentation/components/ProtocolForm.tsx", "utf-8");
+  assert(formCode.includes("onStop"), "ProtocolForm acepta la propiedad onStop");
+  assert(formCode.includes("btn-stop"), "ProtocolForm renderiza el botón de detener generación (.btn-stop)");
+
+  // -------------------------------------------------------------
+  // Test 14: Eliminación de página sobrante en blanco (DOCX y PDF)
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 14: Supresión y Recorte de Páginas Sobrantes en Blanco ---");
+  const exporterCode = fs.readFileSync("src/infrastructure/export/docx-protocol.exporter.ts", "utf-8");
+  assert(
+    exporterCode.includes('w:val="continuous"'),
+    "DocxProtocolExporter reemplaza saltos de página de sección forzados (nextPage) por continuous"
+  );
+  assert(
+    exporterCode.includes('w:line="20"'),
+    "DocxProtocolExporter compacta los párrafos posteriores a la tabla a 1pt para no crear páginas sobrantes"
+  );
+
+  assert(
+    mainTs.includes("removeTrailingBlankPagesFromPdf"),
+    "electron/main.ts implementa removeTrailingBlankPagesFromPdf para limpiar PDFs generados"
+  );
+
+  // -------------------------------------------------------------
+  // Test 15: Loading Animado y Pixelado de Bocchi the Rock
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 15: Animación Pixelada de Carga de Bocchi the Rock ---");
+  const bocchiLoadingPath = path.resolve("src/presentation/components/BocchiLoading.tsx");
+  assert(fs.existsSync(bocchiLoadingPath), "El componente BocchiLoading.tsx existe en src/presentation/components/");
+
+  const bocchiLoadingCode = fs.readFileSync(bocchiLoadingPath, "utf-8");
+  assert(
+    bocchiLoadingCode.includes("Agnes está afinando la redacción"),
+    "BocchiLoading incluye el mensaje 'Agnes está afinando la redacción de tu protocolo...'"
+  );
+  assert(
+    !bocchiLoadingCode.includes("BOCCHI THE ROCK!"),
+    "BocchiLoading no contiene el texto 'BOCCHI THE ROCK!'"
+  );
+  assert(
+    !bocchiLoadingCode.includes("Girando en la silla"),
+    "BocchiLoading no contiene el texto 'Girando en la silla'"
+  );
+  assert(
+    bocchiLoadingCode.includes("bocchiChair"),
+    "BocchiLoading importa y utiliza exclusivamente la animación bocchi-chair.gif"
+  );
+
+  const previewCode = fs.readFileSync("src/presentation/components/ProtocolPreview.tsx", "utf-8");
+  assert(
+    previewCode.includes("<BocchiLoading"),
+    "ProtocolPreview integra el componente BocchiLoading para el estado de carga"
+  );
+
+  const appCssCode = fs.readFileSync("src/App.css", "utf-8");
+  assert(
+    appCssCode.includes("image-rendering: pixelated;"),
+    "App.css aplica 'image-rendering: pixelated' para preservar la nitidez retro de los píxeles"
+  );
+  assert(
+    appCssCode.includes(".bocchi-loading-container") && appCssCode.includes(".bocchi-equalizer"),
+    "App.css incluye los estilos de contenedor arcade y ecualizador musical para Bocchi"
+  );
+
+  const formUpdatedCode = fs.readFileSync("src/presentation/components/ProtocolForm.tsx", "utf-8");
+  assert(
+    formUpdatedCode.includes("btn-bocchi-icon"),
+    "ProtocolForm incluye el icono animado pixelado de Bocchi en el botón de redacción"
   );
 
   console.log("\n🎉 TODAS LAS VERIFICACIONES DE ARQUITECTURA Y PRINCIPIOS SOLID PASARON EXITOSAMENTE.");

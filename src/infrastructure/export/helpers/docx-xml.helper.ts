@@ -126,21 +126,22 @@ export function splitLabel(paragraph: string): { label: string; rest: string } |
   if (!trimmed) return null;
 
   // Case A: Markdown bold concept/term at start:
-  // e.g. **Concepto:** Def, **Concepto**: Def, 1. **Concepto:** Def, - **Concepto:** Def, • **Concepto:** Def
+  // e.g. **Concepto:** Def, **Concepto**: Def, • **Concepto:** Def, • **Todos concordamos en que** Def
   const boldMatch = trimmed.match(
-    /^((?:(?:\d+[.)]|[-*•])\s+)?)\*\*([^*\n]+?)\*\*(?::\s*|\s*:\s*)?(.*)$/
+    /^((?:(?:\d+[.)]|[-*•])\s+)?)\*\*([^*\n]+?)\*\*(\s*:\s*)?(.*)$/
   );
   if (boldMatch) {
     let marker = (boldMatch[1] || "").trim();
     if (marker === "*" || marker === "-") marker = "•";
     const markerPrefix = marker ? `${marker} ` : "";
     let term = boldMatch[2].replace(/\*/g, "").trim();
+    const hasColon = term.endsWith(":") || Boolean(boldMatch[3]);
     if (term.endsWith(":")) {
       term = term.slice(0, -1).trim();
     }
-    const rest = (boldMatch[3] || "").replace(/^[*:\s]+/, "").trim();
+    const rest = (boldMatch[4] || "").replace(/^[*:\s]+/, "").trim();
     return {
-      label: `${markerPrefix}${term}:`.replace(/\*/g, ""),
+      label: `${markerPrefix}${term}${hasColon ? ":" : ""}`.replace(/\*/g, ""),
       rest,
     };
   }

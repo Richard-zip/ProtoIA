@@ -1,114 +1,82 @@
-import { app, ipcMain, shell, BrowserWindow, Menu } from "electron";
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import fs from "node:fs";
-import child_process from "node:child_process";
-createRequire(import.meta.url);
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
-process.env.APP_ROOT = path.join(__dirname$1, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+import { app as d, ipcMain as v, shell as E, BrowserWindow as F, Menu as I } from "electron";
+import { createRequire as C } from "node:module";
+import { fileURLToPath as L } from "node:url";
+import i from "node:path";
+import r from "node:fs";
+import l from "node:child_process";
+C(import.meta.url);
+const P = i.dirname(L(import.meta.url));
+process.env.APP_ROOT = i.join(P, "..");
+const x = process.env.VITE_DEV_SERVER_URL, U = i.join(process.env.APP_ROOT, "dist-electron"), k = i.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = x ? i.join(process.env.APP_ROOT, "public") : k;
 if (process.platform === "win32") {
-  const cacheDir = path.join(app.getPath("userData"), "cache");
-  app.setPath("cache", cacheDir);
+  const o = i.join(d.getPath("userData"), "cache");
+  d.setPath("cache", o);
 }
-let win;
-function createWindow() {
-  Menu.setApplicationMenu(null);
-  win = new BrowserWindow({
+let m;
+function O() {
+  I.setApplicationMenu(null), m = new F({
     title: "Agnes",
-    icon: path.join(process.env.VITE_PUBLIC, "images/agnes.png"),
-    autoHideMenuBar: true,
+    icon: i.join(process.env.VITE_PUBLIC, "images/agnes.png"),
+    autoHideMenuBar: !0,
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: i.join(P, "preload.mjs")
     }
-  });
-  win.removeMenu();
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith("https:") || url.startsWith("http:")) {
-      shell.openExternal(url);
-    }
-    return { action: "deny" };
-  });
-  win.webContents.on("will-navigate", (event, navigationUrl) => {
-    const isDevServer = VITE_DEV_SERVER_URL && navigationUrl.startsWith(VITE_DEV_SERVER_URL);
-    if (!isDevServer && (navigationUrl.startsWith("https:") || navigationUrl.startsWith("http:"))) {
-      event.preventDefault();
-      shell.openExternal(navigationUrl);
-    }
-  });
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
-  win.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
-    console.error(`Renderer failed to load (${errorCode}): ${errorDescription} - ${validatedURL}`);
-  });
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
+  }), m.removeMenu(), m.webContents.setWindowOpenHandler(({ url: o }) => ((o.startsWith("https:") || o.startsWith("http:")) && E.openExternal(o), { action: "deny" })), m.webContents.on("will-navigate", (o, n) => {
+    !(x && n.startsWith(x)) && (n.startsWith("https:") || n.startsWith("http:")) && (o.preventDefault(), E.openExternal(n));
+  }), m.webContents.on("did-finish-load", () => {
+    m == null || m.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  }), m.webContents.on("did-fail-load", (o, n, a, t) => {
+    console.error(`Renderer failed to load (${n}): ${a} - ${t}`);
+  }), x ? m.loadURL(x) : m.loadFile(i.join(k, "index.html"));
 }
-ipcMain.handle("open-external-url", async (_event, url) => {
-  if (typeof url === "string" && (url.startsWith("https:") || url.startsWith("http:"))) {
-    await shell.openExternal(url);
-  }
+v.handle("open-external-url", async (o, n) => {
+  typeof n == "string" && (n.startsWith("https:") || n.startsWith("http:")) && await E.openExternal(n);
 });
-function resolveLibreOfficeBinary() {
-  const isDev = !app.isPackaged;
-  const projectRoot = isDev ? path.join(__dirname$1, "..") : process.resourcesPath;
-  const candidateDirs = [
-    path.join(projectRoot, "bin", "libreoffice"),
-    path.join(process.resourcesPath || "", "bin", "libreoffice"),
-    path.join(__dirname$1, "..", "bin", "libreoffice")
+function _() {
+  const n = !d.isPackaged ? i.join(P, "..") : process.resourcesPath, a = [
+    i.join(n, "bin", "libreoffice"),
+    i.join(process.resourcesPath || "", "bin", "libreoffice"),
+    i.join(P, "..", "bin", "libreoffice")
   ];
-  for (const dir of candidateDirs) {
-    if (!dir) continue;
-    const winExe = path.join(dir, "program", "soffice.exe");
-    if (process.platform === "win32" && fs.existsSync(winExe)) {
-      return { executable: winExe, argsPrefix: [] };
-    }
-    const wrapper = path.join(dir, "soffice");
-    if (fs.existsSync(wrapper)) {
-      return { executable: wrapper, argsPrefix: [] };
-    }
-    const appRun = path.join(dir, "squashfs-root", "AppRun");
-    if (fs.existsSync(appRun)) {
-      return { executable: appRun, argsPrefix: [] };
-    }
+  for (const t of a) {
+    if (!t) continue;
+    const e = i.join(t, "program", "soffice.exe");
+    if (process.platform === "win32" && r.existsSync(e))
+      return { executable: e, argsPrefix: [] };
+    const p = i.join(t, "soffice");
+    if (r.existsSync(p))
+      return { executable: p, argsPrefix: [] };
+    const s = i.join(t, "squashfs-root", "AppRun");
+    if (r.existsSync(s))
+      return { executable: s, argsPrefix: [] };
   }
   if (process.platform === "win32") {
-    const winPaths = [
+    const t = [
       "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
       "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe"
     ];
-    for (const p of winPaths) {
-      if (fs.existsSync(p)) return { executable: p, argsPrefix: [] };
-    }
+    for (const e of t)
+      if (r.existsSync(e)) return { executable: e, argsPrefix: [] };
   } else if (process.platform === "darwin") {
-    const macPath = "/Applications/LibreOffice.app/Contents/MacOS/soffice";
-    if (fs.existsSync(macPath)) return { executable: macPath, argsPrefix: [] };
+    const t = "/Applications/LibreOffice.app/Contents/MacOS/soffice";
+    if (r.existsSync(t)) return { executable: t, argsPrefix: [] };
   } else {
-    const linuxPaths = ["/usr/bin/soffice", "/usr/bin/libreoffice", "/usr/local/bin/soffice"];
-    for (const p of linuxPaths) {
-      if (fs.existsSync(p)) return { executable: p, argsPrefix: [] };
-    }
+    const t = ["/usr/bin/soffice", "/usr/bin/libreoffice", "/usr/local/bin/soffice"];
+    for (const e of t)
+      if (r.existsSync(e)) return { executable: e, argsPrefix: [] };
     try {
-      const output = child_process.execSync("which soffice || which libreoffice", { encoding: "utf-8" }).trim();
-      if (output && fs.existsSync(output)) {
-        return { executable: output, argsPrefix: [] };
-      }
+      const e = l.execSync("which soffice || which libreoffice", { encoding: "utf-8" }).trim();
+      if (e && r.existsSync(e))
+        return { executable: e, argsPrefix: [] };
     } catch {
     }
   }
   return null;
 }
-async function runLibreOfficeConversion(binary, inputDocxPath, outputDir) {
-  const args = [
-    ...binary.argsPrefix,
+async function j(o, n, a) {
+  const t = [
+    ...o.argsPrefix,
     "--headless",
     "--invisible",
     "--nodefault",
@@ -119,139 +87,186 @@ async function runLibreOfficeConversion(binary, inputDocxPath, outputDir) {
     "--convert-to",
     "pdf:writer_pdf_Export",
     "--outdir",
-    outputDir,
-    inputDocxPath
+    a,
+    n
   ];
-  return new Promise((resolve, reject) => {
-    child_process.execFile(
-      binary.executable,
-      args,
+  return new Promise((e, p) => {
+    l.execFile(
+      o.executable,
+      t,
       {
         timeout: 9e4,
         env: {
           ...process.env,
           // Perfil de usuario aislado para evitar conflictos de bloqueo de archivos
-          UserInstallation: `file://${path.join(outputDir, ".lo-profile").replace(/\\/g, "/")}`,
-          HOME: outputDir
+          UserInstallation: `file://${i.join(a, ".lo-profile").replace(/\\/g, "/")}`,
+          HOME: a
         }
       },
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error("[LibreOffice] Error en conversión a PDF:", error, stderr, stdout);
-          reject(error);
-        } else {
-          resolve();
-        }
+      (s, c, f) => {
+        s ? (console.error("[LibreOffice] Error en conversión a PDF:", s, f, c), p(s)) : e();
       }
     );
   });
 }
-ipcMain.handle("convert-docx-to-pdf", async (_event, { docxBase64 }) => {
-  const binary = resolveLibreOfficeBinary();
-  if (!binary) {
-    throw new Error("LIBREOFFICE_NOT_FOUND");
-  }
-  const tempId = `agnes-lo-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const tempDir = path.join(app.getPath("temp"), tempId);
-  await fs.promises.mkdir(tempDir, { recursive: true });
-  const inputDocxPath = path.join(tempDir, "documento.docx");
-  const docxBuffer = Buffer.from(docxBase64, "base64");
-  await fs.promises.writeFile(inputDocxPath, docxBuffer);
+async function D(o) {
   try {
-    await runLibreOfficeConversion(binary, inputDocxPath, tempDir);
-    const outputPdfPath = path.join(tempDir, "documento.pdf");
-    if (!fs.existsSync(outputPdfPath)) {
-      throw new Error("LibreOffice finalizó pero no se encontró el archivo documento.pdf resultante.");
-    }
-    const pdfBuffer = await fs.promises.readFile(outputPdfPath);
-    return pdfBuffer;
-  } finally {
-    fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {
-    });
-  }
-});
-ipcMain.handle("render-protocol-pages", async (_event, { docxBase64 }) => {
-  const binary = resolveLibreOfficeBinary();
-  if (!binary) {
-    return { success: false, error: "LIBREOFFICE_NOT_FOUND" };
-  }
-  const tempId = `agnes-lo-pages-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const tempDir = path.join(app.getPath("temp"), tempId);
-  await fs.promises.mkdir(tempDir, { recursive: true });
-  const inputDocxPath = path.join(tempDir, "documento.docx");
-  const docxBuffer = Buffer.from(docxBase64, "base64");
-  await fs.promises.writeFile(inputDocxPath, docxBuffer);
-  try {
-    await runLibreOfficeConversion(binary, inputDocxPath, tempDir);
-    const outputPdfPath = path.join(tempDir, "documento.pdf");
-    if (!fs.existsSync(outputPdfPath)) {
-      return { success: false, error: "OUTPUT_PDF_NOT_FOUND" };
-    }
-    const pdfBuffer = await fs.promises.readFile(outputPdfPath);
-    const pdfBase64 = pdfBuffer.toString("base64");
-    const pageImages = [];
-    let hasPdftoppm = false;
+    let n = !1, a = !1;
     try {
-      child_process.execSync("which pdftoppm", { stdio: "ignore" });
-      hasPdftoppm = true;
+      l.execSync("which pdftotext", { stdio: "ignore" }), n = !0;
     } catch {
-      hasPdftoppm = false;
     }
-    if (hasPdftoppm) {
-      try {
-        const pagePrefix = path.join(tempDir, "page");
-        child_process.execFileSync("pdftoppm", ["-png", "-r", "150", outputPdfPath, pagePrefix], {
-          timeout: 15e3
-        });
-        const files = await fs.promises.readdir(tempDir);
-        const pageFiles = files.filter((f) => f.startsWith("page-") && f.endsWith(".png")).sort((a, b) => {
-          const numA = parseInt(a.replace("page-", "").replace(".png", ""), 10) || 0;
-          const numB = parseInt(b.replace("page-", "").replace(".png", ""), 10) || 0;
-          return numA - numB;
-        });
-        for (const file of pageFiles) {
-          const imgBuffer = await fs.promises.readFile(path.join(tempDir, file));
-          pageImages.push(`data:image/png;base64,${imgBuffer.toString("base64")}`);
+    try {
+      l.execSync("which pdfinfo", { stdio: "ignore" }), a = !0;
+    } catch {
+    }
+    if (!n || !a) return;
+    let t = !0;
+    for (; t; ) {
+      t = !1;
+      const p = l.execFileSync("pdfinfo", [o], { encoding: "utf8" }).match(/Pages:\s+(\d+)/);
+      if (!p) break;
+      const s = parseInt(p[1], 10);
+      if (s <= 1) break;
+      const c = l.execFileSync(
+        "pdftotext",
+        ["-f", String(s), "-l", String(s), o, "-"],
+        { encoding: "utf8" }
+      );
+      if (!c || c.trim().length === 0) {
+        const f = `${o}.trimmed.pdf`;
+        let y = !1;
+        try {
+          l.execSync("which gs", { stdio: "ignore" }), l.execFileSync(
+            "gs",
+            [
+              "-sDEVICE=pdfwrite",
+              "-dNOPAUSE",
+              "-dBATCH",
+              "-dSAFER",
+              "-dFirstPage=1",
+              `-dLastPage=${s - 1}`,
+              `-sOutputFile=${f}`,
+              o
+            ],
+            { stdio: "ignore" }
+          ), r.existsSync(f) && (await r.promises.rename(f, o), y = !0, t = !0);
+        } catch {
         }
-      } catch (ppmErr) {
-        console.warn("[render-protocol-pages] pdftoppm no disponible o falló:", ppmErr);
+        if (!y)
+          try {
+            if (s === 2)
+              l.execFileSync("pdfseparate", ["-f", "1", "-l", "1", o, f]), r.existsSync(f) && (await r.promises.rename(f, o), t = !0);
+            else {
+              const b = i.dirname(o), u = i.join(b, `blank-trim-%d-${Date.now()}.pdf`);
+              l.execFileSync("pdfseparate", ["-f", "1", "-l", String(s - 1), o, u]);
+              const g = [];
+              for (let h = 1; h < s; h++)
+                g.push(u.replace("%d", String(h)));
+              l.execFileSync("pdfunite", [...g, f]);
+              for (const h of g)
+                r.promises.unlink(h).catch(() => {
+                });
+              r.existsSync(f) && (await r.promises.rename(f, o), t = !0);
+            }
+          } catch {
+          }
       }
     }
-    return {
-      success: true,
-      pdfBase64,
-      pageImages,
-      totalPages: pageImages.length
-    };
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    return { success: false, error: msg };
+  } catch (n) {
+    console.warn("[removeTrailingBlankPagesFromPdf] Error al recortar páginas en blanco:", n);
+  }
+}
+v.handle("convert-docx-to-pdf", async (o, { docxBase64: n }) => {
+  const a = _();
+  if (!a)
+    throw new Error("LIBREOFFICE_NOT_FOUND");
+  const t = `agnes-lo-${Date.now()}-${Math.random().toString(36).slice(2)}`, e = i.join(d.getPath("temp"), t);
+  await r.promises.mkdir(e, { recursive: !0 });
+  const p = i.join(e, "documento.docx"), s = Buffer.from(n, "base64");
+  await r.promises.writeFile(p, s);
+  try {
+    await j(a, p, e);
+    const c = i.join(e, "documento.pdf");
+    if (!r.existsSync(c))
+      throw new Error("LibreOffice finalizó pero no se encontró el archivo documento.pdf resultante.");
+    return await D(c), await r.promises.readFile(c);
   } finally {
-    fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {
+    r.promises.rm(e, { recursive: !0, force: !0 }).catch(() => {
     });
   }
 });
-ipcMain.handle("generate-pdf-from-html", async (_event, { html, title }) => {
-  const workerWin = new BrowserWindow({
-    show: false,
+v.handle("render-protocol-pages", async (o, { docxBase64: n }) => {
+  const a = _();
+  if (!a)
+    return { success: !1, error: "LIBREOFFICE_NOT_FOUND" };
+  const t = `agnes-lo-pages-${Date.now()}-${Math.random().toString(36).slice(2)}`, e = i.join(d.getPath("temp"), t);
+  await r.promises.mkdir(e, { recursive: !0 });
+  const p = i.join(e, "documento.docx"), s = Buffer.from(n, "base64");
+  await r.promises.writeFile(p, s);
+  try {
+    await j(a, p, e);
+    const c = i.join(e, "documento.pdf");
+    if (!r.existsSync(c))
+      return { success: !1, error: "OUTPUT_PDF_NOT_FOUND" };
+    await D(c);
+    const y = (await r.promises.readFile(c)).toString("base64"), b = [];
+    let u = !1;
+    try {
+      l.execSync("which pdftoppm", { stdio: "ignore" }), u = !0;
+    } catch {
+      u = !1;
+    }
+    if (u)
+      try {
+        const g = i.join(e, "page");
+        l.execFileSync("pdftoppm", ["-png", "-r", "150", c, g], {
+          timeout: 15e3
+        });
+        const T = (await r.promises.readdir(e)).filter((w) => w.startsWith("page-") && w.endsWith(".png")).sort((w, S) => {
+          const R = parseInt(w.replace("page-", "").replace(".png", ""), 10) || 0, B = parseInt(S.replace("page-", "").replace(".png", ""), 10) || 0;
+          return R - B;
+        });
+        for (const w of T) {
+          const S = await r.promises.readFile(i.join(e, w));
+          b.push(`data:image/png;base64,${S.toString("base64")}`);
+        }
+      } catch (g) {
+        console.warn("[render-protocol-pages] pdftoppm no disponible o falló:", g);
+      }
+    return {
+      success: !0,
+      pdfBase64: y,
+      pageImages: b,
+      totalPages: b.length
+    };
+  } catch (c) {
+    return { success: !1, error: c instanceof Error ? c.message : String(c) };
+  } finally {
+    r.promises.rm(e, { recursive: !0, force: !0 }).catch(() => {
+    });
+  }
+});
+v.handle("generate-pdf-from-html", async (o, { html: n, title: a }) => {
+  const t = new F({
+    show: !1,
     width: 850,
     height: 1100,
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: false
+      nodeIntegration: !1,
+      contextIsolation: !0,
+      sandbox: !1
     }
-  });
-  const tempHtmlPath = path.join(
-    app.getPath("temp"),
+  }), e = i.join(
+    d.getPath("temp"),
     `agnes-pdf-${Date.now()}-${Math.random().toString(36).slice(2)}.html`
   );
   try {
-    const fullHtml = `<!DOCTYPE html>
+    const p = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${title || "Protocolo Académico"}</title>
+  <title>${a || "Protocolo Académico"}</title>
   <style>
     @page {
       size: letter portrait;
@@ -381,39 +396,29 @@ ipcMain.handle("generate-pdf-from-html", async (_event, { html, title }) => {
   </style>
 </head>
 <body>
-  ${html}
+  ${n}
 </body>
 </html>`;
-    await fs.promises.writeFile(tempHtmlPath, fullHtml, "utf-8");
-    await workerWin.loadFile(tempHtmlPath);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const pdfBuffer = await workerWin.webContents.printToPDF({
+    return await r.promises.writeFile(e, p, "utf-8"), await t.loadFile(e), await new Promise((c) => setTimeout(c, 500)), await t.webContents.printToPDF({
       pageSize: "Letter",
-      printBackground: true,
-      preferCSSPageSize: true,
+      printBackground: !0,
+      preferCSSPageSize: !0,
       margins: { marginType: "none" }
     });
-    return pdfBuffer;
   } finally {
-    workerWin.close();
-    fs.promises.unlink(tempHtmlPath).catch(() => {
+    t.close(), r.promises.unlink(e).catch(() => {
     });
   }
 });
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
-  }
+d.on("window-all-closed", () => {
+  process.platform !== "darwin" && (d.quit(), m = null);
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+d.on("activate", () => {
+  F.getAllWindows().length === 0 && O();
 });
-app.whenReady().then(createWindow);
+d.whenReady().then(O);
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  U as MAIN_DIST,
+  k as RENDERER_DIST,
+  x as VITE_DEV_SERVER_URL
 };

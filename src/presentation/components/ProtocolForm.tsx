@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { IProtocolStrategy } from "../../core/interfaces/protocol-strategy.interface";
+import bocchiChair from "../../assets/bocchi/bocchi-chair.gif";
 
 interface ProtocolFormProps {
   materia: string;
@@ -16,6 +17,7 @@ interface ProtocolFormProps {
   activeStrategy: IProtocolStrategy;
   loading: boolean;
   onGenerate: () => void;
+  onStop?: () => void;
 }
 
 export const ProtocolForm: React.FC<ProtocolFormProps> = ({
@@ -33,6 +35,7 @@ export const ProtocolForm: React.FC<ProtocolFormProps> = ({
   activeStrategy,
   loading,
   onGenerate,
+  onStop,
 }) => {
   const temasCount = useMemo(() => {
     return temasTexto
@@ -183,29 +186,48 @@ export const ProtocolForm: React.FC<ProtocolFormProps> = ({
 
       {/* Botones de acción principal */}
       <div className="actions-row">
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={onGenerate}
-          disabled={loading || !materia.trim()}
-        >
-          {loading ? (
-            <>
-              <svg className="spinner-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-                <path d="M12 2a10 10 0 0 1 10 10" />
-              </svg>
+        {loading ? (
+          <div className="loading-actions-group">
+            <button
+              type="button"
+              className="btn btn-primary btn-generating"
+              disabled
+            >
+              <img
+                src={bocchiChair}
+                alt="Bocchi"
+                className="btn-bocchi-icon"
+              />
               <span>Redactando con IA...</span>
-            </>
-          ) : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
-              </svg>
-              <span>Generar protocolo</span>
-            </>
-          )}
-        </button>
+            </button>
+            {onStop && (
+              <button
+                type="button"
+                className="btn btn-stop"
+                onClick={onStop}
+                title="Detener la generación del protocolo"
+                aria-label="Detener generación"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+                <span>Detener</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onGenerate}
+            disabled={!materia.trim()}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+            </svg>
+            <span>Generar protocolo</span>
+          </button>
+        )}
       </div>
 
       <p className="form-disclaimer-note">

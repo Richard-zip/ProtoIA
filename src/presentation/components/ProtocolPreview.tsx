@@ -3,6 +3,7 @@ import { Protocol } from "../../core/entities/protocol.entity";
 import { IProtocolStrategy } from "../../core/interfaces/protocol-strategy.interface";
 import { IDocumentExporter } from "../../core/interfaces/document-exporter.interface";
 import { DocxPreview } from "./DocxPreview";
+import { BocchiLoading } from "./BocchiLoading";
 
 interface ProtocolPreviewProps {
   materia: string;
@@ -16,6 +17,7 @@ interface ProtocolPreviewProps {
   errorMessage: string | null;
   documentExporter?: IDocumentExporter;
   onRetry?: () => void;
+  onStop?: () => void;
   onExportWord?: () => void;
   onExportPdf?: () => void;
   onRequestConfig?: () => void;
@@ -34,6 +36,7 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
   errorMessage,
   documentExporter,
   onRetry,
+  onStop,
   onExportWord,
   onExportPdf,
   onRequestConfig,
@@ -211,21 +214,7 @@ export const ProtocolPreview: React.FC<ProtocolPreviewProps> = ({
       })()}
 
       {loading ? (
-        <div className="state-container">
-          <svg className="spinner-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5">
-            <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
-            <path d="M12 2a10 10 0 0 1 10 10" />
-          </svg>
-          <div className="skeleton-wrapper">
-            <div className="skeleton-line title" style={{ margin: "0 auto" }} />
-            <div className="skeleton-line" />
-            <div className="skeleton-line" />
-            <div className="skeleton-line short" style={{ margin: "0 auto" }} />
-          </div>
-          <p className="state-desc">
-            El motor de IA está redactando y estructurando las secciones académicas del protocolo.
-          </p>
-        </div>
+        <BocchiLoading onStop={onStop} />
       ) : protocol && protocol.sections.length > 0 ? (
         documentExporter ? (
           <DocxPreview protocol={protocol} documentExporter={documentExporter} />

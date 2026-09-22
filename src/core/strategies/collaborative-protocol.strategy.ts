@@ -232,18 +232,23 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
         return line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").replace(/\*/g, "").trim();
       }
 
-      // Remover cualquier viñeta, guion, número previo y asteriscos
+      // Remover cualquier viñeta, guion o número previo
       const content = line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").trim();
 
-      const colonIndex = content.indexOf(":");
-      if (colonIndex !== -1) {
-        const topic = content.slice(0, colonIndex).replace(/\*/g, "").trim();
-        const rest = content.slice(colonIndex + 1).replace(/^[*:\s]+/, "").replace(/\*/g, "").trim();
-        return `• ${topic}: ${rest}`;
+      const boldColonMatch = content.match(/^\*\*([^*:]+?)\*\*\s*:\s*(.*)$/);
+      const plainColonMatch = content.match(/^([A-ZÁÉÍÓÚÑ][^:]{2,60})\s*:\s*(.*)$/);
+
+      if (boldColonMatch) {
+        const topic = boldColonMatch[1].trim();
+        const rest = boldColonMatch[2].trim();
+        return `• **${topic}:** ${rest}`;
+      } else if (plainColonMatch) {
+        const topic = plainColonMatch[1].replace(/\*/g, "").trim();
+        const rest = plainColonMatch[2].trim();
+        return `• **${topic}:** ${rest}`;
       }
 
-      const cleanContent = content.replace(/\*/g, "").trim();
-      return `• ${cleanContent}`;
+      return `• ${content}`;
     });
 
     return formatted.join("\n\n");
@@ -259,7 +264,7 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
     if (lines.length === 0) return text;
 
     const formatted = lines.map((line) => {
-      const content = line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").replace(/\*/g, "").trim();
+      const content = line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").trim();
       return `• ${content}`;
     });
 
@@ -278,15 +283,20 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
     const formatted = lines.map((line) => {
       const content = line.replace(/^(?:(?:\d+[.)]|[-*•])\s*)+/, "").trim();
 
-      const colonIndex = content.indexOf(":");
-      if (colonIndex !== -1) {
-        const topic = content.slice(0, colonIndex).replace(/\*/g, "").trim();
-        const rest = content.slice(colonIndex + 1).replace(/^[*:\s]+/, "").replace(/\*/g, "").trim();
-        return `• ${topic}: ${rest}`;
+      const boldColonMatch = content.match(/^\*\*([^*:]+?)\*\*\s*:\s*(.*)$/);
+      const plainColonMatch = content.match(/^([A-ZÁÉÍÓÚÑ][^:]{2,60})\s*:\s*(.*)$/);
+
+      if (boldColonMatch) {
+        const topic = boldColonMatch[1].trim();
+        const rest = boldColonMatch[2].trim();
+        return `• **${topic}:** ${rest}`;
+      } else if (plainColonMatch) {
+        const topic = plainColonMatch[1].replace(/\*/g, "").trim();
+        const rest = plainColonMatch[2].trim();
+        return `• **${topic}:** ${rest}`;
       }
 
-      const cleanContent = content.replace(/\*/g, "").trim();
-      return `• ${cleanContent}`;
+      return `• ${content}`;
     });
 
     return formatted.join("\n\n");

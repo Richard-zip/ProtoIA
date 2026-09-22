@@ -3,8 +3,28 @@ import { IAIService } from "../../core/interfaces/ai-service.interface";
 export class MockAIService implements IAIService {
   constructor(private readonly delayMs = 1000) {}
 
-  async generateContent(prompt: string): Promise<string> {
-    await new Promise((resolve) => setTimeout(resolve, this.delayMs));
+  async generateContent(prompt: string, signal?: AbortSignal): Promise<string> {
+    if (signal?.aborted) {
+      const abortError = new Error("Generación de protocolo detenida por el usuario.");
+      abortError.name = "AbortError";
+      throw abortError;
+    }
+
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(resolve, this.delayMs);
+      if (signal) {
+        signal.addEventListener(
+          "abort",
+          () => {
+            clearTimeout(timer);
+            const abortError = new Error("Generación de protocolo detenida por el usuario.");
+            abortError.name = "AbortError";
+            reject(abortError);
+          },
+          { once: true }
+        );
+      }
+    });
 
     const isColab = prompt.includes("PROTOCOLO COLABORATIVO");
     if (isColab) {
@@ -38,12 +58,12 @@ Cohesión: Medida en que las responsabilidades de un módulo forman una unidad l
 
 RESUMEN DE LAS DISCUSIONES GRUPALES
 Durante nuestras discusiones grupales surgieron varios aspectos importantes sobre arquitectura:
-• Microservicios vs Monolitos: Algunos argumentaban que los microservicios son siempre mejores, otros defendían que los monolitos modulares reducen complejidad operativa. Concordamos en que depende del tamaño del equipo y volumen.
-• Inversión de Dependencias: Hubo diferentes opiniones sobre la complejidad añadida de usar interfaces para todo. Concordamos en que en módulos centrales es indispensable.
-• Desacoplamiento de Base de Datos: Algunos sostenían que abstraer la persistencia añade sobrecarga innecesaria. No hubo consenso sobre la conveniencia en proyectos pequeños.
-• Reglas de Negocio en la UI: Hubo acuerdo unánime en que la UI jamás debe contener lógica de dominio. Concordamos en aplicar Clean Architecture.
-• Pruebas Unitarias: Algunos defendían TDD estricto, otros preferían pruebas de integración posteriores. No hubo consenso sobre TDD como estándar obligatorio.
-• Manejo de Errores: Se debatieron enfoques de excepciones versus Result types. Concordamos en estandarizar el manejo en capas intermedias.
+• **Microservicios vs Monolitos:** Algunos argumentaban que los microservicios son siempre mejores, otros defendían que los monolitos modulares reducen complejidad operativa. Concordamos en que depende del tamaño del equipo y volumen.
+• **Inversión de Dependencias:** Hubo diferentes opiniones sobre la complejidad añadida de usar interfaces para todo. Concordamos en que en módulos centrales es indispensable.
+• **Desacoplamiento de Base de Datos:** Algunos sostenían que abstraer la persistencia añade sobrecarga innecesaria. No hubo consenso sobre la conveniencia en proyectos pequeños.
+• **Reglas de Negocio en la UI:** Hubo acuerdo unánime en que la UI jamás debe contener lógica de dominio. Concordamos en aplicar Clean Architecture.
+• **Pruebas Unitarias:** Algunos defendían TDD estricto, otros preferían pruebas de integración posteriores. No hubo consenso sobre TDD como estándar obligatorio.
+• **Manejo de Errores:** Se debatieron enfoques de excepciones versus Result types. Concordamos en estandarizar el manejo en capas intermedias.
 
 ENCUENTROS CONCEPTUALES
 • Todos concordamos en que la mantenibilidad a largo plazo supera el beneficio de entregas apresuradas con deuda técnica.
@@ -54,12 +74,12 @@ ENCUENTROS CONCEPTUALES
 • El grupo reconoció que la documentación de decisiones arquitectónicas mediante ADRs agrega un valor indispensable.
 
 DESENCUENTROS CONCEPTUALES
-• Selección de persistencia relacional vs NoSQL: Postura relacional con ACID estricto mientras que otros preferían NoSQL por flexibilidad. No hubo consenso sobre una recomendación universal.
-• Uso de ORM vs Queries nativos: Postura a favor de ORM por productividad mientras que otros defendían queries directos por control de rendimiento. No se llegó a acuerdo sobre un estándar único.
-• Adopción de GraphQL vs REST: Postura por GraphQL para reducir over-fetching mientras otros preferían REST por simplicidad de caché. No hubo consenso sobre el protocolo idóneo.
-• Gestión de Estado Global en Frontend: Postura de Context nativo mientras otros preferían stores externos centralizados. No se llegó a acuerdo sobre la biblioteca definitiva.
-• Manejo de Migraciones automáticas: Postura a favor de migraciones en arranque mientras otros exigían scripts manuales en pipelines. No hubo consenso sobre la automatización completa.
-• Cobertura mínima de código: Postura fijando 80% como umbral bloqueante mientras otros consideraban que las métricas rígidas desincentivan pruebas significativas. No se llegó a acuerdo sobre un número fijo.
+• **Selección de persistencia relacional vs NoSQL:** Postura relacional con ACID estricto mientras que otros preferían NoSQL por flexibilidad. No hubo consenso sobre una recomendación universal.
+• **Uso de ORM vs Queries nativos:** Postura a favor de ORM por productividad mientras que otros defendían queries directos por control de rendimiento. No se llegó a acuerdo sobre un estándar único.
+• **Adopción de GraphQL vs REST:** Postura por GraphQL para reducir over-fetching mientras otros preferían REST por simplicidad de caché. No hubo consenso sobre el protocolo idóneo.
+• **Gestión de Estado Global en Frontend:** Postura de Context nativo mientras otros preferían stores externos centralizados. No se llegó a acuerdo sobre la biblioteca definitiva.
+• **Manejo de Migraciones automáticas:** Postura a favor de migraciones en arranque mientras otros exigían scripts manuales en pipelines. No hubo consenso sobre la automatización completa.
+• **Cobertura mínima de código:** Postura fijando 80% como umbral bloqueante mientras otros consideraban que las métricas rígidas desincentivan pruebas significativas. No se llegó a acuerdo sobre un número fijo.
 
 METODOLOGÍA DE TRABAJO (CÓMO SE HIZO LA ACTIVIDAD COLABORATIVA)
 Para realizar esta actividad colaborativa dividimos los temas entre los dos integrantes del grupo para investigar de manera individual. Posteriormente nos reunimos para compartir los hallazgos de cada uno y discutir los conceptos principales. Durante las discusiones identificamos puntos de acuerdo y desacuerdo sobre las tecnologías estudiadas. Luego trabajamos de forma conjunta en un documento compartido para integrar la información, definir conceptos clave y elaborar las conclusiones. Finalmente realizamos una revisión colaborativa del protocolo completo antes de la entrega.

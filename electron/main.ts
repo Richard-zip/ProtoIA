@@ -204,6 +204,108 @@ async function runLibreOfficeConversion(
   })
 }
 
+// Función auxiliar para recortar páginas finales vacías/en blanco si existen
+async function removeTrailingBlankPagesFromPdf(pdfPath: string): Promise<void> {
+  try {
+    let hasPdftotext = false
+    let hasPdfinfo = false
+    try {
+      child_process.execSync('which pdftotext', { stdio: 'ignore' })
+      hasPdftotext = true
+    } catch {
+      // pdftotext no disponible en el sistema
+    }
+    try {
+      child_process.execSync('which pdfinfo', { stdio: 'ignore' })
+      hasPdfinfo = true
+    } catch {
+      // pdfinfo no disponible en el sistema
+    }
+
+    if (!hasPdftotext || !hasPdfinfo) return
+
+    let checkAgain = true
+    while (checkAgain) {
+      checkAgain = false
+      const infoOutput = child_process.execFileSync('pdfinfo', [pdfPath], { encoding: 'utf8' })
+      const match = infoOutput.match(/Pages:\s+(\d+)/)
+      if (!match) break
+      const totalPages = parseInt(match[1], 10)
+      if (totalPages <= 1) break
+
+      const pageText = child_process.execFileSync(
+        'pdftotext',
+        ['-f', String(totalPages), '-l', String(totalPages), pdfPath, '-'],
+        { encoding: 'utf8' }
+      )
+
+      if (!pageText || pageText.trim().length === 0) {
+        const trimmedPath = `${pdfPath}.trimmed.pdf`
+        let trimmed = false
+
+        // Intentar con Ghostscript primero si está disponible
+        try {
+          child_process.execSync('which gs', { stdio: 'ignore' })
+          child_process.execFileSync(
+            'gs',
+            [
+              '-sDEVICE=pdfwrite',
+              '-dNOPAUSE',
+              '-dBATCH',
+              '-dSAFER',
+              '-dFirstPage=1',
+              `-dLastPage=${totalPages - 1}`,
+              `-sOutputFile=${trimmedPath}`,
+              pdfPath,
+            ],
+            { stdio: 'ignore' }
+          )
+          if (fs.existsSync(trimmedPath)) {
+            await fs.promises.rename(trimmedPath, pdfPath)
+            trimmed = true
+            checkAgain = true
+          }
+        } catch {
+          // gs falló o no disponible
+        }
+
+        // Fallback a pdfseparate / pdfunite si gs no estuvo disponible
+        if (!trimmed) {
+          try {
+            if (totalPages === 2) {
+              child_process.execFileSync('pdfseparate', ['-f', '1', '-l', '1', pdfPath, trimmedPath])
+              if (fs.existsSync(trimmedPath)) {
+                await fs.promises.rename(trimmedPath, pdfPath)
+                checkAgain = true
+              }
+            } else {
+              const tempDir = path.dirname(pdfPath)
+              const partPrefix = path.join(tempDir, `blank-trim-%d-${Date.now()}.pdf`)
+              child_process.execFileSync('pdfseparate', ['-f', '1', '-l', String(totalPages - 1), pdfPath, partPrefix])
+              const parts: string[] = []
+              for (let i = 1; i < totalPages; i++) {
+                parts.push(partPrefix.replace('%d', String(i)))
+              }
+              child_process.execFileSync('pdfunite', [...parts, trimmedPath])
+              for (const p of parts) {
+                fs.promises.unlink(p).catch(() => {})
+              }
+              if (fs.existsSync(trimmedPath)) {
+                await fs.promises.rename(trimmedPath, pdfPath)
+                checkAgain = true
+              }
+            }
+          } catch {
+            // pdfseparate/pdfunite falló
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[removeTrailingBlankPagesFromPdf] Error al recortar páginas en blanco:', err)
+  }
+}
+
 // Canal IPC para conversión de DOCX nativo a PDF idéntico usando LibreOffice
 ipcMain.handle('convert-docx-to-pdf', async (_event, { docxBase64 }: { docxBase64: string; title: string }) => {
   const binary = resolveLibreOfficeBinary()
@@ -226,6 +328,8 @@ ipcMain.handle('convert-docx-to-pdf', async (_event, { docxBase64 }: { docxBase6
     if (!fs.existsSync(outputPdfPath)) {
       throw new Error('LibreOffice finalizó pero no se encontró el archivo documento.pdf resultante.')
     }
+
+    await removeTrailingBlankPagesFromPdf(outputPdfPath)
 
     const pdfBuffer = await fs.promises.readFile(outputPdfPath)
     return pdfBuffer
@@ -256,6 +360,8 @@ ipcMain.handle('render-protocol-pages', async (_event, { docxBase64 }: { docxBas
     if (!fs.existsSync(outputPdfPath)) {
       return { success: false, error: 'OUTPUT_PDF_NOT_FOUND' }
     }
+
+    await removeTrailingBlankPagesFromPdf(outputPdfPath)
 
     const pdfBuffer = await fs.promises.readFile(outputPdfPath)
     const pdfBase64 = pdfBuffer.toString('base64')

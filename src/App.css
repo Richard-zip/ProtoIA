@@ -468,6 +468,53 @@
   border-color: rgba(148, 163, 184, 0.35);
 }
 
+.loading-actions-group {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.loading-actions-group .btn-generating {
+  flex: 1;
+}
+
+.btn-bocchi-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.btn-stop {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  padding: 12px 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-stop:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
+.btn-stop:active:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
+  transform: translateY(1px);
+}
+
+.state-stop-btn {
+  margin-top: 10px;
+  padding: 10px 22px;
+  font-size: 0.9rem;
+}
+
 /* Preview Section & Document Paper */
 .preview-header-meta {
   display: flex;
@@ -1052,6 +1099,174 @@
   line-height: 1.68;
   max-width: 75ch;
   text-align: justify;
+}
+
+/* ==========================================================================
+   BOCCHI THE ROCK! - Retro Pixel Loading Experience
+   ========================================================================== */
+.bocchi-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  border-radius: 14px;
+  background: radial-gradient(circle at center, rgba(244, 114, 182, 0.08) 0%, rgba(15, 23, 42, 0.75) 100%);
+  border: 1px solid rgba(244, 114, 182, 0.28);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35), 0 0 24px rgba(244, 114, 182, 0.1);
+  min-height: 420px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+/* Sutiles líneas de escaneo estilo monitor arcade CRT */
+.bocchi-loading-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.12) 0px,
+    rgba(0, 0, 0, 0.12) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  opacity: 0.6;
+  z-index: 1;
+}
+
+.bocchi-pixel-card {
+  max-width: 440px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.bocchi-cubes-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+.bocchi-cubes-ornament .cube {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.bocchi-cubes-ornament .cube-cyan {
+  background: #38bdf8;
+  color: rgba(56, 189, 248, 0.7);
+}
+
+.bocchi-cubes-ornament .cube-yellow {
+  background: #facc15;
+  color: rgba(250, 204, 21, 0.7);
+}
+
+.bocchi-scene {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 2px solid rgba(244, 114, 182, 0.32);
+  box-shadow: 0 8px 24px rgba(244, 114, 182, 0.15), inset 0 0 16px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.bocchi-pixel-gif {
+  width: 220px;
+  height: 165px;
+  object-fit: contain;
+  border-radius: 8px;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  display: block;
+}
+
+/* Ecualizador musical animado de Kessoku Band */
+.bocchi-equalizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.bocchi-equalizer .eq-bar {
+  width: 5px;
+  border-radius: 2px;
+  background: linear-gradient(to top, #38bdf8, #f472b6);
+  animation: eqBounce 1.1s infinite ease-in-out;
+}
+
+.bocchi-equalizer .bar-1 { animation-delay: 0s; }
+.bocchi-equalizer .bar-2 { animation-delay: 0.2s; }
+.bocchi-equalizer .bar-3 { animation-delay: 0.4s; }
+.bocchi-equalizer .bar-4 { animation-delay: 0.1s; }
+.bocchi-equalizer .bar-5 { animation-delay: 0.5s; }
+.bocchi-equalizer .bar-6 { animation-delay: 0.3s; }
+.bocchi-equalizer .bar-7 { animation-delay: 0.15s; }
+
+@keyframes eqBounce {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.5;
+  }
+  50% {
+    height: 18px;
+    opacity: 1;
+  }
+}
+
+.bocchi-caption-wrap {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 380px;
+}
+
+.bocchi-main-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.bocchi-dynamic-message {
+  font-size: 0.88rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin: 0;
+  min-height: 2.6em;
+}
+
+.bocchi-stop-wrapper {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.bocchi-stop-btn {
+  padding: 9px 20px;
+  font-size: 0.86rem;
 }
 
 /* Empty & Loading States */

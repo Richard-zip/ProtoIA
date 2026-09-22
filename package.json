@@ -1,7 +1,9 @@
 {
   "name": "agnes",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Agnes - Asistente Académico IA para la Generación de Protocolos",
+  "author": "RichardDev",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -40,6 +42,7 @@
   "build": {
     "appId": "com.agnes.protoia",
     "productName": "Agnes",
+    "icon": "public/icon.png",
     "compression": "maximum",
     "files": [
       "dist/**/*",
@@ -49,6 +52,7 @@
       "target": [
         "AppImage"
       ],
+      "icon": "public/icon.png",
       "category": "Education"
     },
     "extraResources": [

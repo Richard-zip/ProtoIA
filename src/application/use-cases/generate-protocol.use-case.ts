@@ -12,9 +12,15 @@ export class GenerateProtocolUseCase {
     private readonly logger: ILogger
   ) {}
 
-  async execute(dto: GenerateProtocolDto): Promise<Protocol> {
+  async execute(dto: GenerateProtocolDto, signal?: AbortSignal): Promise<Protocol> {
     const reqId = Date.now();
     this.logger.info(`(${reqId}) Iniciando generación de protocolo tipo="${dto.tipo}"`);
+
+    if (signal?.aborted) {
+      const abortError = new Error("Generación de protocolo detenida por el usuario.");
+      abortError.name = "AbortError";
+      throw abortError;
+    }
 
     const strategy = this.protocolRegistry.get(dto.tipo);
 
@@ -43,8 +49,14 @@ export class GenerateProtocolUseCase {
     const startTime = Date.now();
     let rawText: string;
     try {
-      rawText = await this.aiService.generateContent(prompt);
+      rawText = await this.aiService.generateContent(prompt, signal);
     } catch (err) {
+      if (signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
+        this.logger.info(`(${reqId}) Generación de protocolo detenida por el usuario.`);
+        const abortError = new Error("Generación de protocolo detenida por el usuario.");
+        abortError.name = "AbortError";
+        throw abortError;
+      }
       const duration = Date.now() - startTime;
       this.logger.error(
         `(${reqId}) Error de IA tras ${duration} ms: ${err instanceof Error ? err.message : String(err)}`,

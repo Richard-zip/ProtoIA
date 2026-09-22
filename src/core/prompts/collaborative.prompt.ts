@@ -20,8 +20,13 @@ PROHIBICIONES DE ESTILO (OBLIGATORIAS):
 
 REGLA DE VIÑETAS (OBLIGATORIA):
 - Las secciones Resumen de las discusiones grupales, Encuentros conceptuales y Desencuentros conceptuales deben presentar cada punto precedido por una viñeta de punto (•), NUNCA por números, guiones, asteriscos ni ningún otro símbolo.
-- El formato correcto es: "• Nombre corto: contenido del punto." SIN asteriscos (* o **) en la viñeta ni en el nombre corto. Cada viñeta va en su propia línea o párrafo.
-- Está prohibido usar numeración (1., 2., 3...), guiones (-), asteriscos (*) o (**) en estas tres secciones.
+- El formato exacto de cada viñeta es: "• " (punto medio seguido de un espacio) + el contenido del punto en prosa continua, todo en la misma línea o párrafo.
+- Cuando el punto tenga un nombre corto, este va inmediatamente después del punto medio, en negrilla con asteriscos y seguido de dos puntos. Ejemplo:
+  • **Enfoque cuantitativo frente al cualitativo:** se argumentaba que la matriz cualitativa de probabilidad e impacto es suficiente para priorizar hallazgos en organizaciones medianas, mientras que se defendía que solo la cuantificación económica del riesgo permite justificar la inversión ante la alta dirección. Concordamos en que la elección depende de la madurez del área de TI y de la calidad de los datos históricos disponibles.
+- Cuando el punto no tenga nombre corto (caso de los Encuentros conceptuales), la viñeta va seguida directamente de la fórmula de apertura en negrilla con asteriscos y dos puntos, o sin negrilla si la fórmula ya es clara. Ejemplo:
+  • **Todos concordamos en que** el análisis de riesgos es el punto de partida de la auditoría informática, pues determina el alcance, la profundidad de las pruebas y la asignación de los recursos del equipo.
+- Está prohibido usar numeración (1., 2., 3...), guiones (-), asteriscos (*) u otros símbolos como marcadores de lista en estas tres secciones.
+- Cada viñeta debe ir en su propia línea o párrafo, sin saltos de línea internos ni listas anidadas.
 - La única excepción es la introducción de una línea que precede al listado del resumen de discusiones grupales, la cual no lleva viñeta.
 
 REGLA DE IMPERSONALIDAD Y FORMALIDAD EN LAS DISCUSIONES:
@@ -98,14 +103,14 @@ Redacta una introducción breve de una sola línea con este formato exacto (sin 
 
 Luego genera EXACTAMENTE 6 puntos, cada uno precedido por una viñeta de punto (•), con este formato obligatorio:
 
-• Nombre corto del tema en 3-6 palabras: [Primera postura presentada de forma impersonal, usando verbos como "se argumentaba que", "se defendía que", "se sostenía que", "se planteaba que"] [conector de contraste formal, por ejemplo: "mientras que", "aunque", "por otro lado", "también se defendía que", "sin embargo"] [Segunda postura opuesta presentada también de forma impersonal]. [Cierre alternando entre "Concordamos en que..." y "No hubo consenso sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
+• **Nombre corto del tema en 3-6 palabras:** [Primera postura presentada de forma impersonal, usando verbos como "se argumentaba que", "se defendía que", "se sostenía que", "se planteaba que"] [conector de contraste formal, por ejemplo: "mientras que", "aunque", "por otro lado", "también se defendía que", "sin embargo"] [Segunda postura opuesta presentada también de forma impersonal]. [Cierre alternando entre "Concordamos en que..." y "No hubo consenso sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
 
 Reglas estrictas para esta sección:
 - Cada punto DEBE comenzar con una viñeta de punto (•), nunca con números, guiones, asteriscos ni ningún otro símbolo.
 - PROHIBIDO mencionar integrantes, usar "algunos comentaban", "otros decían", "un compañero argumentaba", "yo sostuve" o cualquier fórmula que personalice las posturas.
 - Usa exclusivamente construcciones impersonales: "se argumentaba que", "se defendía que", "se sostenía que", "hubo diferentes posiciones sobre", "una posición planteaba que", "otra postura advertía que", "se propuso", "se objetó que", "se consideró razonable", "se exigió que".
 - Cada punto debe tratar un aspecto DISTINTO y específico del contenido, basado en tensiones reales (trade-offs, decisiones de diseño, aplicabilidad práctica), no genérico.
-- El nombre corto debe ser conciso y técnico, seguido de dos puntos, sin asteriscos.
+- El nombre corto en negrilla con asteriscos (**Nombre corto:**) debe ser conciso y técnico, seguido obligatoriamente de dos puntos.
 - No repitas el mismo conector de contraste en puntos consecutivos.
 - La redacción debe ser en prosa continua, sin cortes bruscos ni frases telegráficas.
 
@@ -132,7 +137,7 @@ DESENCUENTROS CONCEPTUALES
 
 Genera EXACTAMENTE 6 puntos, cada uno precedido por una viñeta de punto (•), con este formato obligatorio:
 
-• Nombre corto del desacuerdo en 3-6 palabras: [Postura A presentada de forma impersonal, con verbos como "se sostuvo que", "se defendió que", "se consideró que"] mientras que [Postura B presentada también de forma impersonal, con verbos como "se advirtió que", "se objetó que", "se exigió que"]. [Cierre alternando entre "No hubo consenso sobre..." y "No se llegó a acuerdo sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
+• **Nombre corto del desacuerdo en 3-6 palabras:** [Postura A presentada de forma impersonal, con verbos como "se sostuvo que", "se defendió que", "se consideró que"] mientras que [Postura B presentada también de forma impersonal, con verbos como "se advirtió que", "se objetó que", "se exigió que"]. [Cierre alternando entre "No hubo consenso sobre..." y "No se llegó a acuerdo sobre...", distribuyendo tres cierres de cada tipo a lo largo de los seis puntos].
 
 Reglas estrictas para esta sección:
 - Cada punto DEBE comenzar con una viñeta de punto (•), nunca con números, guiones, asteriscos ni ningún otro símbolo.
