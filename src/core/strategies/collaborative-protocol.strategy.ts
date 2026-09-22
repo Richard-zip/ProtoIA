@@ -8,7 +8,7 @@ export class CollaborativeProtocolStrategy extends BaseProtocolStrategy {
   readonly requiresParticipants = true;
   readonly defaultParticipantsText =
     "Nombre del estudiante 1\nNombre del estudiante 2\nNombre del estudiante 3";
-  readonly templatePath = "/templates/PLANTILLA%20PROTOCOLO%20COLABORATIVO.docx";
+  readonly templatePath = "templates/PLANTILLA%20PROTOCOLO%20COLABORATIVO.docx";
 
   buildPrompt(input: ProtocolStrategyInput): string {
     return this.formatSubstitutions(COLLABORATIVE_PROMPT, input, this.defaultParticipantsText);

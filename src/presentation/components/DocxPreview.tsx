@@ -52,12 +52,12 @@ export const DocxPreview: React.FC<DocxPreviewProps> = ({ protocol, documentExpo
         return false;
       }
 
-      setLoadingStep("Compilando documento con motor oficial LibreOffice...");
+      setLoadingStep("Generando y estructurando vista previa del documento...");
       const docxBase64 = await blobToBase64(docxBlob);
 
       const result = await window.electronAPI.renderProtocolPages({ docxBase64 });
       if (!result.success) {
-        console.warn("[DocxPreview] LibreOffice no pudo renderizar:", result.error);
+        console.warn("[DocxPreview] No se pudo renderizar la vista previa:", result.error);
         return false;
       }
 
@@ -114,13 +114,13 @@ export const DocxPreview: React.FC<DocxPreviewProps> = ({ protocol, documentExpo
     setError(null);
 
     try {
-      setLoadingStep("Preparando datos de la plantilla institucional...");
+      setLoadingStep("Preparando documento institucional...");
       const exportFile = await documentExporter.exportDocument(protocol);
 
       const success = await renderWithLibreOffice(exportFile.blob);
       if (!success) {
         throw new Error(
-          "El motor LibreOffice no pudo compilar las páginas del protocolo. Por favor verifica la disponibilidad del motor y haz clic en reintentar."
+          "No se pudo compilar la vista previa de las páginas del protocolo. Por favor haz clic en reintentar."
         );
       }
     } catch (err) {
@@ -141,7 +141,7 @@ export const DocxPreview: React.FC<DocxPreviewProps> = ({ protocol, documentExpo
         <div className="docx-preview-toolbar" role="toolbar" aria-label="Controles de vista previa">
           <div className="docx-preview-toolbar-left">
             <div className="docx-preview-badge-status">
-              <span className="lo-engine-pill">LibreOffice Oficial</span>
+              <span className="lo-engine-pill">Vista Previa Oficial</span>
               <span>
                 {pages.length} {pages.length === 1 ? "página oficial" : "páginas oficiales"} (idéntico a Word y PDF)
               </span>

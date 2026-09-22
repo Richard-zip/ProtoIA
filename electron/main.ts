@@ -88,6 +88,43 @@ ipcMain.handle('open-external-url', async (_event, url: string) => {
   }
 })
 
+// Canal IPC nativo para cargar plantillas de Word de forma local y segura (compatible con app.asar y AppImage)
+ipcMain.handle('load-template', async (_event, templatePathOrName: string) => {
+  try {
+    const rawName = typeof templatePathOrName === 'string' ? templatePathOrName : ''
+    const cleanName = path.basename(decodeURIComponent(rawName))
+
+    const searchDirs = [
+      path.join(RENDERER_DIST, 'templates'),
+      path.join(process.env.APP_ROOT, 'dist', 'templates'),
+      path.join(process.env.APP_ROOT, 'public', 'templates'),
+      path.join(process.resourcesPath || '', 'templates'),
+      path.join(process.resourcesPath || '', 'app.asar', 'dist', 'templates'),
+      path.join(app.getAppPath(), 'dist', 'templates'),
+      path.join(app.getAppPath(), 'templates'),
+    ]
+
+    for (const dir of searchDirs) {
+      const candidate = path.join(dir, cleanName)
+      if (fs.existsSync(candidate)) {
+        const buffer = await fs.promises.readFile(candidate)
+        return { success: true, bufferBase64: buffer.toString('base64') }
+      }
+    }
+
+    return {
+      success: false,
+      error: `No se encontró la plantilla "${cleanName}" en las rutas de la aplicación.`,
+    }
+  } catch (err) {
+    console.error('[Main] Error al cargar plantilla de Word:', err)
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+})
+
 interface LibreOfficeBinary {
   executable: string
   argsPrefix: string[]
@@ -326,7 +363,7 @@ ipcMain.handle('convert-docx-to-pdf', async (_event, { docxBase64 }: { docxBase6
 
     const outputPdfPath = path.join(tempDir, 'documento.pdf')
     if (!fs.existsSync(outputPdfPath)) {
-      throw new Error('LibreOffice finalizó pero no se encontró el archivo documento.pdf resultante.')
+      throw new Error('No se encontró el archivo PDF resultante de la exportación.')
     }
 
     await removeTrailingBlankPagesFromPdf(outputPdfPath)

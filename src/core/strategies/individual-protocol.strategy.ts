@@ -7,7 +7,7 @@ export class IndividualProtocolStrategy extends BaseProtocolStrategy {
   readonly label = "Individual";
   readonly requiresParticipants = false;
   readonly defaultParticipantsText = "Nombre del estudiante";
-  readonly templatePath = "/templates/PLANTILLA%20PROTOCOLO%20INDIVIDUAL.docx";
+  readonly templatePath = "templates/PLANTILLA%20PROTOCOLO%20INDIVIDUAL.docx";
 
   buildPrompt(input: ProtocolStrategyInput): string {
     return this.formatSubstitutions(INDIVIDUAL_PROMPT, input, this.defaultParticipantsText);

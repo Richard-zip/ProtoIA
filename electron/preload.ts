@@ -31,5 +31,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('convert-docx-to-pdf', params),
   renderProtocolPages: (params: { docxBase64: string }) =>
     ipcRenderer.invoke('render-protocol-pages', params),
+  loadTemplate: (templatePathOrName: string) =>
+    ipcRenderer.invoke('load-template', templatePathOrName),
 })
 

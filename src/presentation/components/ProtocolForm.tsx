@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { IProtocolStrategy } from "../../core/interfaces/protocol-strategy.interface";
-import bocchiChair from "../../assets/bocchi/bocchi-chair.gif";
 
 interface ProtocolFormProps {
   materia: string;
@@ -193,11 +192,10 @@ export const ProtocolForm: React.FC<ProtocolFormProps> = ({
               className="btn btn-primary btn-generating"
               disabled
             >
-              <img
-                src={bocchiChair}
-                alt="Bocchi"
-                className="btn-bocchi-icon"
-              />
+              <svg className="spinner-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" />
+              </svg>
               <span>Redactando con IA...</span>
             </button>
             {onStop && (

@@ -14,19 +14,54 @@ export class DocxProtocolExporter implements IDocumentExporter {
     const resolvedTemplatePath =
       (options?.templatePath as string | undefined) || strategy.templatePath;
 
-    let response = await fetch(resolvedTemplatePath);
-    if (!response.ok && !resolvedTemplatePath.includes("/templates/")) {
-      const fallbackPath = `/templates${resolvedTemplatePath.startsWith("/") ? "" : "/"}${resolvedTemplatePath}`;
-      const fallbackResponse = await fetch(fallbackPath);
-      if (fallbackResponse.ok) {
-        response = fallbackResponse;
+    let templateBuffer: ArrayBuffer | null = null;
+
+    // 1. Prioridad: Carga mediante canal IPC nativo en Electron (100% compatible con AppImage y app.asar)
+    if (typeof window !== "undefined" && window.electronAPI?.loadTemplate) {
+      try {
+        const result = await window.electronAPI.loadTemplate(resolvedTemplatePath);
+        if (result.success && result.bufferBase64) {
+          const binaryString = atob(result.bufferBase64);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          templateBuffer = bytes.buffer;
+        }
+      } catch (ipcErr) {
+        console.warn("[DocxProtocolExporter] Falló carga IPC, probando fallback web:", ipcErr);
       }
     }
-    if (!response.ok) {
-      throw new Error(`No se pudo cargar la plantilla de Word desde "${resolvedTemplatePath}"`);
+
+    // 2. Fallback: Carga web mediante fetch relativo seguro (resuelve relativo a la app)
+    if (!templateBuffer) {
+      const cleanPath = resolvedTemplatePath.replace(/^\/+/, "");
+      const candidates = [
+        cleanPath,
+        `./${cleanPath}`,
+        resolvedTemplatePath,
+      ];
+      if (!cleanPath.includes("templates/")) {
+        candidates.unshift(`templates/${cleanPath}`, `./templates/${cleanPath}`);
+      }
+
+      for (const candidate of candidates) {
+        try {
+          const response = await fetch(candidate);
+          if (response.ok) {
+            templateBuffer = await response.arrayBuffer();
+            break;
+          }
+        } catch {
+          // Continuar con siguiente candidato
+        }
+      }
     }
 
-    const templateBuffer = await response.arrayBuffer();
+    if (!templateBuffer) {
+      throw new Error(`No se pudo cargar la plantilla de Word institucional ("${resolvedTemplatePath}").`);
+    }
     const zip = await JSZip.loadAsync(templateBuffer);
     const documentPath = "word/document.xml";
     const documentXml = await zip.file(documentPath)?.async("string");

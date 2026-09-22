@@ -18,6 +18,11 @@ interface Window {
       pageImages?: string[];
       totalPages?: number;
     }>;
+    loadTemplate?: (templatePathOrName: string) => Promise<{
+      success: boolean;
+      bufferBase64?: string;
+      error?: string;
+    }>;
   };
 }
 

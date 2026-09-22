@@ -776,8 +776,50 @@ Después de estudiar y discutir colaborativamente seguridad informatica, conclui
 
   const formUpdatedCode = fs.readFileSync("src/presentation/components/ProtocolForm.tsx", "utf-8");
   assert(
-    formUpdatedCode.includes("btn-bocchi-icon"),
-    "ProtocolForm incluye el icono animado pixelado de Bocchi en el botón de redacción"
+    !formUpdatedCode.includes("btn-bocchi-icon"),
+    "ProtocolForm ya no incluye el gif animado en el botón de redacción"
+  );
+  assert(
+    formUpdatedCode.includes("spinner-icon"),
+    "ProtocolForm incluye un spinner SVG limpio en el botón de redacción"
+  );
+
+  const previewDocxCode = fs.readFileSync("src/presentation/components/DocxPreview.tsx", "utf-8");
+  assert(
+    !previewDocxCode.includes("LibreOffice Oficial"),
+    "DocxPreview no muestra menciones directas a LibreOffice en su interfaz ni badges de usuario"
+  );
+  assert(
+    previewDocxCode.includes("Vista Previa Oficial"),
+    "DocxPreview muestra el badge limpio 'Vista Previa Oficial'"
+  );
+
+  // -------------------------------------------------------------
+  // Test 16: Carga Nativa de Plantillas Docx en Producción / AppImage
+  // -------------------------------------------------------------
+  console.log("\n--- TEST 16: Carga Nativa de Plantillas Docx para Entorno de Producción y AppImage ---");
+  const mainTsUpdated = fs.readFileSync("electron/main.ts", "utf-8");
+  assert(
+    mainTsUpdated.includes("load-template"),
+    "electron/main.ts implementa el canal IPC 'load-template' para lectura transparente de plantillas"
+  );
+
+  const preloadTsUpdated = fs.readFileSync("electron/preload.ts", "utf-8");
+  assert(
+    preloadTsUpdated.includes("loadTemplate"),
+    "electron/preload.ts expone 'loadTemplate' en electronAPI a través del puente de contexto"
+  );
+
+  const viteEnvTsUpdated = fs.readFileSync("src/vite-env.d.ts", "utf-8");
+  assert(
+    viteEnvTsUpdated.includes("loadTemplate"),
+    "src/vite-env.d.ts define el tipado estricto para 'loadTemplate'"
+  );
+
+  const exporterCodeUpdated = fs.readFileSync("src/infrastructure/export/docx-protocol.exporter.ts", "utf-8");
+  assert(
+    exporterCodeUpdated.includes("loadTemplate"),
+    "DocxProtocolExporter prioriza el canal IPC loadTemplate para evitar errores 'Failed to fetch'"
   );
 
   console.log("\n🎉 TODAS LAS VERIFICACIONES DE ARQUITECTURA Y PRINCIPIOS SOLID PASARON EXITOSAMENTE.");
