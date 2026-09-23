@@ -30,3 +30,6 @@ release/
 
 # LibreOffice portable binaries (generados por pnpm run setup:libreoffice)
 bin/libreoffice/installed/
+
+# Agent skills
+.agents/
