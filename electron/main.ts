@@ -149,6 +149,14 @@ function resolveLibreOfficeBinary(): LibreOfficeBinary | null {
     if (process.platform === 'win32' && fs.existsSync(winExe)) {
       return { executable: winExe, argsPrefix: [] }
     }
+    const winExeApp = path.join(dir, 'App', 'libreoffice', 'program', 'soffice.exe')
+    if (process.platform === 'win32' && fs.existsSync(winExeApp)) {
+      return { executable: winExeApp, argsPrefix: [] }
+    }
+    const winExeDirect = path.join(dir, 'soffice.exe')
+    if (process.platform === 'win32' && fs.existsSync(winExeDirect)) {
+      return { executable: winExeDirect, argsPrefix: [] }
+    }
 
     // Script wrapper / ejecutable soffice portable Linux/macOS
     const wrapper = path.join(dir, 'soffice')
@@ -168,9 +176,20 @@ function resolveLibreOfficeBinary(): LibreOfficeBinary | null {
     const winPaths = [
       'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
       'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'LibreOffice', 'program', 'soffice.exe'),
+      path.join(process.env.ProgramFiles || 'C:\\Program Files', 'LibreOffice', 'program', 'soffice.exe'),
     ]
     for (const p of winPaths) {
       if (fs.existsSync(p)) return { executable: p, argsPrefix: [] }
+    }
+
+    try {
+      const output = child_process.execSync('where soffice.exe || where soffice', { encoding: 'utf-8' }).split(/\r?\n/)[0].trim()
+      if (output && fs.existsSync(output)) {
+        return { executable: output, argsPrefix: [] }
+      }
+    } catch {
+      // No en PATH
     }
   } else if (process.platform === 'darwin') {
     const macPath = '/Applications/LibreOffice.app/Contents/MacOS/soffice'

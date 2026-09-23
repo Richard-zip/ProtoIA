@@ -8,10 +8,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
+    "build:linux": "tsc && vite build && electron-builder --linux",
+    "build:win": "tsc && vite build && electron-builder --win",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "node scripts/run-verification.mjs",
-    "setup:libreoffice": "bash scripts/setup-portable-libreoffice.sh"
+    "setup:libreoffice": "bash scripts/setup-portable-libreoffice.sh",
+    "setup:libreoffice:win": "powershell -ExecutionPolicy Bypass -File scripts/setup-portable-libreoffice.ps1"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -54,6 +57,20 @@
       ],
       "icon": "public/icon.png",
       "category": "Education"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Agnes"
     },
     "extraResources": [
       {
